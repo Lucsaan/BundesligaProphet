@@ -11,19 +11,15 @@
         </ion-list-header>
 
         <ion-item *ngFor="let game of gameDay.games" ion-wrap>
+            <ion-avatar item-start small>
+                <img src={{game.Team1.TeamIconUrl}}>
+            </ion-avatar>
+            <span>{{game.Team1.TeamName}} </span> {{game.MatchResults[1]?.PointsTeam1}} : {{game.MatchResults[1]?.PointsTeam2}}
+            <span>{{game.Team2.TeamName}}</span>
+            <ion-avatar item-end small>
+                <img src={{game.Team2.TeamIconUrl}}>
+            </ion-avatar>
 
-            <ion-item>
-                <ion-avatar item-start small>
-                    <img src={{game.Team1.TeamIconUrl}}>
-                </ion-avatar>
-                <h1 item-right>{{game.MatchResults[1]?.PointsTeam1}}</h1><span item-left>{{game.Team1.TeamName}}</span>
-            </ion-item>
-            <ion-item>
-                <ion-avatar item-start small>
-                    <img src={{game.Team2.TeamIconUrl}}>
-                </ion-avatar>
-                <h1 item-right>{{game.MatchResults[1]?.PointsTeam2}}</h1><span item-left>{{game.Team2.TeamName}}</span>
-            </ion-item>
 
             <span style="text-align:center"></span>
         </ion-item>
