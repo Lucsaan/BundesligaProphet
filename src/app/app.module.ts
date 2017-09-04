@@ -13,6 +13,8 @@ import { StatusBar } from '@ionic-native/status-bar';
 import { SplashScreen } from '@ionic-native/splash-screen';
 import { LigaDataProvider } from '../providers/liga-data/liga-data';
 import { IonicStorageModule } from '@ionic/storage';
+import { DbControllerProvider } from '../providers/db-controller/db-controller';
+import { ApiControllerProvider } from '../providers/api-controller/api-controller';
 
 
 
@@ -44,6 +46,8 @@ import { IonicStorageModule } from '@ionic/storage';
     SplashScreen,
     {provide: ErrorHandler, useClass: IonicErrorHandler},
     LigaDataProvider,
+    DbControllerProvider,
+    ApiControllerProvider,
     
   ]
 })
