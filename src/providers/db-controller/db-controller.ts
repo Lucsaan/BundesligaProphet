@@ -42,6 +42,9 @@ export class DbControllerProvider {
     });
 
   }
+  getDataById(db, id){
+    return db.get(id);
+  }
   create(db, data){
     db.put(data);
   }
