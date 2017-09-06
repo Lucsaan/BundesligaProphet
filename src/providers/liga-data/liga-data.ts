@@ -5,6 +5,9 @@ import PouchDB from 'pouchdb';
 import { Storage } from '@ionic/storage';
 import { ToastController } from 'ionic-angular';
 import { LoadingController } from 'ionic-angular';
+import { ApiControllerProvider } from '../api-controller/api-controller';
+import { DbControllerProvider } from '../db-controller/db-controller';
+
 
 
 /*
@@ -21,17 +24,50 @@ export class LigaDataProvider {
   lastCompleteGameDay: number;
   loader: any;
 
-  constructor(public http: Http, private storage:Storage, public toastCtrl : ToastController, public loadingCtrl: LoadingController ) {
+  constructor(public http: Http, private storage:Storage, public toastCtrl : ToastController, public loadingCtrl: LoadingController, public apiController: ApiControllerProvider, 
+    public dbController : DbControllerProvider ) {
     
-    this.db = new PouchDB('allGames');
+    this.db = this.dbController.getDb('actualGames');
 
-    this.getGameDays().then((data) => {
-      if(data.length < 1) {
-        this.firstSeed(1);
-      }else {
-        console.log(this.data);
+    this.apiController.getData('https://www.openligadb.de/api/getmatchdata/bl1/2016').subscribe((data) => {
+      console.log(data);
+    });
+
+    // this.getGameDays().then((data) => {
+    //   if(data.length < 1) {
+    //     this.seed(1);
+    //   }else {
+    //     console.log(this.data);
+    //   }
+    // })
+
+    this.dbController.getData(this.db).then((data) => {
+      console.log(data);
+      this.data = data;
+        console.log(data);
+
+        if(this.data.length < 1){
+          console.log("Nix drin")
+
+        }else{
+          console.log('Was drin')
       }
-    })
+
+    });
+
+    let years = {
+      2014: 'true',
+      2015: 'false',
+      2016: 'true'
+    }
+
+
+
+
+    this.dbController.create(this.db, years);
+
+
+
     
   }
 
@@ -43,7 +79,7 @@ export class LigaDataProvider {
   * var gameDay -> der jewilige Spieltag - hier im jahr 2017
   */
 
-  firstSeed(i){
+  seed(i){
     console.log(i);
     if(i === 1){
       this.loader = this.presentLoading();
@@ -52,7 +88,7 @@ export class LigaDataProvider {
       let gameDay = {
         day : i,
         games : data
-      }
+      };
       if(data.length > 1){
         try{
           this.createGameDay(gameDay);
@@ -60,7 +96,7 @@ export class LigaDataProvider {
           console.log(e);
           return;
         }
-        this.firstSeed(++i);
+        this.seed(++i);
       }  else {
         this.loader.dismiss();
       }
@@ -70,7 +106,7 @@ export class LigaDataProvider {
 
   getAll(){
     if(this.data < 1){
-      this.firstSeed(1);
+      this.seed(1);
     } else{
       console.log('Hab scho');
     }
@@ -119,7 +155,7 @@ export class LigaDataProvider {
   }
 
   createGameDay(gameDay){
-      this.db.post(gameDay);
+      this.db.put(gameDay);
   }
 
   updateGameDay(gameDay){
