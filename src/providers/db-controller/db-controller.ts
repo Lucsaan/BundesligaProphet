@@ -43,7 +43,7 @@ export class DbControllerProvider {
 
   }
   create(db, data){
-    db.post(data);
+    db.put(data);
   }
   update(db, data){
     db.put(data).catch((err) => {
