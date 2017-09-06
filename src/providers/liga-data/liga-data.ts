@@ -8,14 +8,6 @@ import { LoadingController } from 'ionic-angular';
 import { ApiControllerProvider } from '../api-controller/api-controller';
 import { DbControllerProvider } from '../db-controller/db-controller';
 
-
-
-/*
-  Generated class for the LigaDataProvider provider.
-
-  See https://angular.io/docs/ts/latest/guide/dependency-injection.html
-  for more info on providers and Angular DI.
-*/
 @Injectable()
 export class LigaDataProvider {
 
@@ -28,60 +20,23 @@ export class LigaDataProvider {
   lastYears: any;
   settings: any = [];
 
-  constructor(public http: Http, private storage:Storage, public toastCtrl : ToastController, public loadingCtrl: LoadingController, public apiController: ApiControllerProvider, public dbController : DbControllerProvider ) {
-
-    this.getData();
-       
-    // this.apiController.getData('https://www.openligadb.de/api/getmatchdata/bl1/2016').subscribe((data) => {
-    //   console.log(data);
-    // });
-
-    // this.getGameDays().then((data) => {
-    //   if(data.length < 1) {
-    //     this.seed(1);
-    //   }else {
-    //     console.log(this.data);
-    //   }
-    // })
-
-    // this.dbController.getData(db).then((data) => {
-    //   console.log(data);
-    //   this.data = data;
-    //     console.log(data);
-
-    //     if(this.data.length < 1){
-    //       console.log("Nix drin")
-
-    //     }else{
-    //       console.log('Was drin')
-    //   }
-
-    // });
-
-    // let years = {
-    //   2014: 'true',
-    //   2015: 'false',
-    //   2016: 'true'
-    // }
-
-
-
-    // this.dbController.create(this.db, years);
-
-
-
-    
+  constructor(
+    public http: Http, 
+    public storage:Storage, 
+    public toastCtrl : ToastController, 
+    public loadingCtrl: LoadingController, 
+    public apiController: ApiControllerProvider, 
+    public dbController : DbControllerProvider ) {
+      
+      this.getData();    
   }
 
    getData(){
-    /**
-     * Get settings from database or seed new settings
-     */
     this.dbController.getData(this.dbController.getDb('settings')).then((data) => {
         this.settings = data;
         console.log(this.settings);
         if(this.settings.length < 1){
-          console.log('Noch keine Settings vorhanden');
+          console.log('Noch keine Settings und Datenbanken vorhanden');
           console.log('Setze Settings');
           console.log('Setze Datenbank');
           this.seedAll();
@@ -90,29 +45,14 @@ export class LigaDataProvider {
             this.lastYears = data;
             console.log(this.lastYears);
           });
+          this.dbController.getData(this.dbController.getDb('actualYearDB')).then((data) => {
+            this.actualYear = data;
+            console.log(this.actualYear);
+          });
         }
-        
       });
-
-      // /**
-      //  * Get data from the last Years from database
-      //  */
-      // this.dbController.getData(this.dbController.getDb('lastYearsDB')).then((data) => {
-      //   this.lastYears = data;
-      //   console.log(this.lastYears);
-      //   if(this.lastYears.length < 1){
-      //     console.log('Noch keine Datensätze vorhanden für die letzten Jahre');
-      //     this.settings.forEach(element => {
-      //       if(element._id === 'years'){
-      //         this.getLastYears(element);
-      //       }
-      //     });
-      //   }
-      // });
-    
   }
-
-
+  
   seedAll(){
     let baseUrl = 'https://www.openligadb.de/api/getmatchdata/bl1/';
     
@@ -122,6 +62,7 @@ export class LigaDataProvider {
       2015: true,
       2016: true
     }
+
     this.dbController.create(this.dbController.getDb('settings'), this.settings);
     
     for(let i = 2014 ; i < new Date().getFullYear(); i++){
@@ -142,164 +83,12 @@ export class LigaDataProvider {
       
     }
     this.getData();
-    
-    
-    
-
-
-
   }
-  
-  getLastYears(years){
-    let baseUrl = 'https://www.openligadb.de/api/getmatchdata/bl1/';
-    
-    console.log(JSON.stringify(years[2014]));
-    console.log(Object.keys(years));
-
-    if(years[2014].isBoolean()){
-      let dataArray = [];
-      this.apiController.getData(baseUrl + '2014').subscribe((data) => {
-        data.forEach(element => {
-          dataArray.push(element);          
-        });
-        let year = {
-          _id: '2014',
-          data: dataArray
-        }
-        this.dbController.create(this.dbController.getDb('lastYearsDB'),year);
-      })
-    }
-    
-  }
-  
-  /*
-  * Response der Spieltage aus der openligaDB
-  * var gameDay -> der jewilige Spieltag - hier im jahr 2017
-  */
-
-  // seed(i){
-  //   console.log(i);
-  //   if(i === 1){
-  //     this.loader = this.presentLoading();
-  //   }
-  //   this.getDataFromApi(i).subscribe((data) => {
-  //     let gameDay = {
-  //       day : i,
-  //       games : data
-  //     };
-  //     if(data.length > 1){
-  //       try{
-  //         this.createGameDay(gameDay);
-  //       }catch(e) {
-  //         console.log(e);
-  //         return;
-  //       }
-  //       this.seed(++i);
-  //     }  else {
-  //       this.loader.dismiss();
-  //     }
-  //   });    
-      
-  // }
-
- 
-  getDataFromApi(gameDay){
-    let url = 'https://www.openligadb.de/api/getmatchdata/bl1/2017/' + gameDay;
-    let response = this.http.get(url).map(
-      data => data.json()
-      
-      
-    );
-    return response;
-  }
-
+   
   setStorageLocal(key, value){
     this.storage.set(key, value);
   }
   getStorageLocal(key){  }
-
-  // getGameDays() {
-  //   if(this.data){
-  //     return Promise.resolve(this.data);
-  //   }
-  //   return new Promise(resolve => {
-  //     this.db.allDocs({
-  //       include_docs: true
-  //     }).then(
-  //       (result) => {
-  //         this.data = [];
-  //         let doc = result.rows.map(
-  //           (row) => {
-  //             this.data.push(row.doc);
-  //           }
-  //         );
-  //         resolve(this.data);
-  //         this.db.changes({live:true, since: 'now', include_docs: true}).on('change', (change) => {
-  //           this.handleChange(change);
-  //         });
-  //       }
-  //     ).catch((error) => {
-  //       console.log(error);
-  //     });
-  //   });
-  // }
-
-  // createGameDay(gameDay){
-  //     this.db.put(gameDay);
-  // }
-
-  // updateGameDay(gameDay){
-  //   this.db.put(gameDay).catch((err)=> {
-  //     console.log(err);
-  //   });
-  // }
-
-  // deletegameDay(gameDay){
-  //   this.db.remove(gameDay).catch((err) => {
-  //     console.log(err);
-  //   });
-  //   console.log('Spieltag ' + gameDay.day + ' gelöscht!');
-  // }
-
-  // resetOnlineApi(){
-  //   for(let gameDay of this.data){
-  //     this.deletegameDay(gameDay);
-  //   }
-  // }
-
-  // handleChange(change){
- 
-  //   let changedDoc = null;
-  //   let changedIndex = null;
- 
-  //   this.data.forEach((doc, index) => {
- 
-  //     if(doc._id === change.id){
-  //       changedDoc = doc;
-  //       changedIndex = index;
-  //     }
- 
-  //   });
- 
-  //   //A document was deleted
-  //   if(change.deleted){
-  //     this.data.splice(changedIndex, 1);
-  //   } 
-  //   else {
-  
-  //     //A document was updated
-  //     if(changedDoc){
-  //       this.data[changedIndex] = change.doc;
-  //     } 
-  
-  //     //A document was added
-  //     else {
-  //       this.data.push(change.doc); 
-  //     }
- 
-  //   }
- 
-  // }
 
   equaliseGameDay(data){
     console.log(data);
