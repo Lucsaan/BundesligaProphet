@@ -27,19 +27,47 @@ export class LigaDataProvider {
   constructor(public http: Http, private storage:Storage, public toastCtrl : ToastController, public loadingCtrl: LoadingController, public apiController: ApiControllerProvider, 
     public dbController : DbControllerProvider ) {
     
-    this.db = this.dbController.getDb('allGames');
+    this.db = this.dbController.getDb('actualGames');
 
     this.apiController.getData('https://www.openligadb.de/api/getmatchdata/bl1/2016').subscribe((data) => {
       console.log(data);
     });
 
-    this.getGameDays().then((data) => {
-      if(data.length < 1) {
-        this.seed(1);
-      }else {
-        console.log(this.data);
+    // this.getGameDays().then((data) => {
+    //   if(data.length < 1) {
+    //     this.seed(1);
+    //   }else {
+    //     console.log(this.data);
+    //   }
+    // })
+
+    this.dbController.getData(this.db).then((data) => {
+      console.log(data);
+      this.data = data;
+        console.log(data);
+
+        if(this.data.length < 1){
+          console.log("Nix drin")
+
+        }else{
+          console.log('Was drin')
       }
-    })
+
+    });
+
+    let years = {
+      2014: 'true',
+      2015: 'false',
+      2016: 'true'
+    }
+
+
+
+
+    this.dbController.create(this.db, years);
+
+
+
     
   }
 
@@ -60,7 +88,7 @@ export class LigaDataProvider {
       let gameDay = {
         day : i,
         games : data
-      }
+      };
       if(data.length > 1){
         try{
           this.createGameDay(gameDay);
@@ -127,7 +155,7 @@ export class LigaDataProvider {
   }
 
   createGameDay(gameDay){
-      this.db.post(gameDay);
+      this.db.put(gameDay);
   }
 
   updateGameDay(gameDay){
