@@ -142,7 +142,7 @@ export class LigaDataProvider {
  
 
   evaluate(){
-    let listedClubs = {};
+    
     
 
     this.dbController.getDataById(this.lastYearsDb, '2014').then((data) => {
