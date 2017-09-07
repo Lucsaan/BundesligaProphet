@@ -7,6 +7,7 @@ import { ToastController } from 'ionic-angular';
 import { LoadingController } from 'ionic-angular';
 import { ApiControllerProvider } from '../api-controller/api-controller';
 import { DbControllerProvider } from '../db-controller/db-controller';
+import { Observable } from "rxjs/Observable";
 
 @Injectable()
 export class LigaDataProvider {
@@ -14,11 +15,13 @@ export class LigaDataProvider {
   actualYearDb: any;
   lastYearsDb: any;
   settingsDb: any;
+  clubsDb: any;
   loader: any;
 
   actualYear: any;
   lastYears: any;
   settings: any = [];
+  actualClubs: any = {};
 
   constructor(
     public http: Http, 
@@ -27,55 +30,133 @@ export class LigaDataProvider {
     public loadingCtrl: LoadingController, 
     public apiController: ApiControllerProvider, 
     public dbController : DbControllerProvider ) {
+
+      this.lastYearsDb = this.dbController.getDb('lastYearsDb');
+      this.settingsDb = this.dbController.getDb('settings');
+      this.clubsDb = this.dbController.getDb('clubs');
       
-     this.getData();  
+      this.getData();  
         
   }
 
-   getData(){
-    this.dbController.getDataById(this.dbController.getDb('settings'), 'years')
-    .then((data) => {
-      this.settings = data;
-      
-      //console.log(this.settings);
-      this.dbController.getData(this.dbController.getDb('lastYearsDb')).then((data) => {
-        this.lastYears = data;
-        console.log(this.lastYears); 
-       this.evaluate();
-        
+  getData(){
+      this.getSettings()
+        .then((data) => {
+          this.getDataFromDataBase().subscribe((data) =>{
+            if(this.lastYears !== undefined && this.actualClubs.length < 1){
+              console.log(this.lastYears);
+              console.log('Bilde Vereine');
+              this.buildActualClubs().subscribe((data) =>{
+                this.getClubs().then((data) => {
+                  this.actualClubs = data;
+                  console.log(this.actualClubs);
+                })
+              });
+            }
+          });
+          this.settings = data;
+          console.log(this.settings);
+         
+        })
+        .catch((err) => {
+          console.log('Hole Daten');
+          this.seedAll().subscribe((response) => {  
+            this.getData();
+          });
+
+        });
+  }
+  getDataFromDataBase(){
+    return Observable.create(observer => {
+      this.getClubs().then((data) => {
+          this.actualClubs = data;
+          observer.next(data);
       });
-      this.dbController.getData(this.dbController.getDb('actualYearDb')).then((data) => {
-        this.actualYear = data;
-       // console.log(this.actualYear);
+      this.getGamesAllYears().then((data) => {
+          this.lastYears = data;
+          observer.next(data);
       });
-      this.getNewGamedays();
-      
-      
+
     })
-    .catch((err) => {
-      console.log('New Seed');
-      this.seedAll();
-      return;
-    });
-
-
   }
+  buildActualClubs(){
+    return Observable.create(observer => {
+      this.lastYears.forEach(element => {
+        element.games.forEach(element => {
+          this.addClub(element.Team1.TeamName);
+        });
+      });
+      this.getClubs().then((data) => {
+        observer.next(data);
+        console.log(this.actualClubs);
+        observer.complete();
+      })
+    })
+  }
+
+   addClub(clubName){
+    if(this.clubExists(clubName)){
+      return;
+    }
+    this.actualClubs[clubName] = true;
+    console.log(clubName+ ' existiert nicht. Wird angelegt')
+    let club = {
+        _id: clubName,
+        gegner: {}
+    }
+    this.dbController.update(this.dbController.getDb('clubs'), club);
+  }
+  clubExists(clubName){
+    if(this.actualClubs[clubName] !== undefined){
+      return true;
+    }
+      return false;
+  }
+
+  
+  getSettings(){
+    return this.dbController.getDataById(this.settingsDb, 'years');
+  }
+  getClubs(){
+    return this.dbController.getData(this.clubsDb);
+  }
+  getClub(clubName){
+    this.dbController.getDataById(this.clubsDb, clubName).then((data) => {
+      return data;
+    })
+  }
+  getGamesAllYears(){
+    return this.dbController.getData(this.lastYearsDb);
+  }
+  getGamesOneYear(year){
+    this.dbController.getDataById(this.lastYearsDb, year).then((data) =>{
+      return data;
+    })
+  }
+  refreshActualClubs(){
+    this.actualClubs = {};
+    this.getClubs().then((data) => {
+      this.actualClubs = data;
+    });
+  }
+ 
 
   evaluate(){
-    let lastYearsDb = this.dbController.getDb('lastYearsDb');
-    this.dbController.getDataById(lastYearsDb, '2014').then((data) => {
+    let listedClubs = {};
+    
+
+    this.dbController.getDataById(this.lastYearsDb, '2014').then((data) => {
       let games2014 = data;
       console.log(games2014);
       console.log('Verarbeite Daten');
       games2014.games.forEach(element => {
-        if(!this.clubExists(element.Team1.TeamName)){
-          console.log(element.Team1.TeamName + ' existiert nicht. Wird angelegt')
-          let club = {
-          _id: element.Team1.TeamName,
-          gegner: {}
-        }
-        this.dbController.update(this.dbController.getDb('clubs'), club);
-        }
+        
+       
+          if(!this.clubExists(element.Team1.TeamName)){
+            
+      }
+        
+        
         this.setResult(element);
       });
       this.dbController.getData(this.dbController.getDb('clubs')).then((data) => {
@@ -87,33 +168,36 @@ export class LigaDataProvider {
   }
   
   seedAll(){
-    let baseUrl = 'https://www.openligadb.de/api/getmatchdata/bl1/';
     
-    this.settings = {
-      _id: 'years',
-    }
+    return Observable.create(observer => {
+      let baseUrl = 'https://www.openligadb.de/api/getmatchdata/bl1/';
+    
+      this.settings = {
+        _id: 'years',
+      }
 
-    for(let i = 2014 ; i < new Date().getFullYear()+1; i++){
-      console.log('Hole Daten aus dem Jahr ' + (i));
-      this.settings[i] = true;
-      let allGamedays = [];
-      this.apiController.getData(baseUrl + (i).toString()).subscribe(data => {
-        data.forEach(element => {
-          allGamedays.push(element);
-        });
-        console.log(allGamedays);
-        let year = {
-          _id: (i).toString(),
-          games: allGamedays
-        }
-        console.log(year);
-        this.dbController.create(this.dbController.getDb('lastYearsDb'),year);
-      })
-      
-    }
-    this.dbController.create(this.dbController.getDb('settings'), this.settings)
-    
-    this.getData();
+      for(let i = 2014 ; i < new Date().getFullYear()+1; i++){
+        console.log('Hole Daten aus dem Jahr ' + (i));
+        this.settings[i] = true;
+        let allGamedays = [];
+        this.apiController.getData(baseUrl + (i).toString()).subscribe(data => {
+          data.forEach(element => {
+            allGamedays.push(element);
+          });
+          let year = {
+            _id: (i).toString(),
+            games: allGamedays
+          };
+          observer.next(this.dbController.create(this.dbController.getDb('lastYearsDb'),year));
+        }) 
+      }
+      observer.next(this.dbController.create(this.settingsDb, this.settings));
+      observer.complete();
+    });   
+  }
+
+  newClub(game){
+
   }
 
   setResult(game){
@@ -137,20 +221,7 @@ export class LigaDataProvider {
     // }); 
     
   }
-  clubExists(clubName) : boolean{
-    let clubsDb = this.dbController.getDb('clubs');
-    this.dbController.getDataById(clubsDb,clubName)
-    .then(
-      (data) => {
-        //console.log(true);
-        return true;
-      })
-      .catch((err) => {
-       //console.log(false);
-        return false;
-      });
-      return false;
-  }
+  
 
   setClub(clubName){
     let clubsDB = this.dbController.getDb('clubs');
