@@ -49,8 +49,10 @@ export class DbControllerProvider {
     db.put(data);
   }
   update(db, data){
-    db.put(data).catch((err) => {
-      console.log(err);
+    return db.put(data, (response, err) =>{
+      response => {return true}
+      err => {return false}
+      
     });
   }
   delete(db, data){
