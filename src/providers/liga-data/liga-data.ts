@@ -35,50 +35,60 @@ export class LigaDataProvider {
       this.settingsDb = this.dbController.getDb('settings');
       this.clubsDb = this.dbController.getDb('clubs');
       
-      this.getData();  
+      this.loader = this.presentLoading();
+      this.initData();  
         
   }
 
-  getData(){
-    console.log('getData()');
-    this.getSettings()
-      .then((data) => {
-        let clubs = this.getClubs().then((data) =>{
-          this.actualClubs = data;
-          console.log('Clubs gespeichert');
+  initData(){
+    
+    console.log('Initialisierung: initData()');
+    this.loadData().then((response) => {
+      console.log('Settings vorhanden');
+      console.log('Spieldaten der letzten Jahre vorhanden');
+      console.log(response);
+      this.lastYears = response[1];
+      if(response[0][0] === undefined){
+        console.log('Noch keine Clubs gespeichert');
+        this.buildActualClubs().then(response =>{
+          console.log(response);
+          this.initData();
         });
-        let games = this.getGamesAllYears().then((data) => {
-          this.lastYears = data;
-          console.log('Spiele gespeichert');
-        });
+      }else {
+        console.log('Vereine der letzten Jahre vorhanden');
+        this.loader.dismiss();
+      }
 
-        Promise.all([clubs, games])
-          .then((response) => {
-            console.log("getDataFromDataBase() - all Done");
-            if(this.lastYears !== undefined && this.actualClubs.length < 1){
-              console.log(this.lastYears);
-              console.log('Bilde Vereine');
-              this.buildActualClubs().then(() => {
-                
-                this.getClubs().then((actualClubs) => {
-                  this.actualClubs = actualClubs;
-                  console.log(this.actualClubs);
-                });
-              });
-            }
-            this.settings = data;
-          })
-        }).catch((err) => {
-          console.log('Hole Daten');
-          this.seedAll().then(() => {
-            this.getGamesAllYears().then((data) => {
-              this.lastYears = data;
-              this.getData();
-            })
-          });
-          
-          
+    }).catch(reason => {
+      console.log(reason);
+      this.seedAll().then(response =>{
+        console.log(response);
+        this.initData();
+      });   
+    });
+  }
+  
+  loadData(){
+    let clubs = new Promise((resolve) => {
+      this.getClubs().then((data)=>{
+        resolve(data);
       });
+    });
+    
+    let allGames = new Promise((resolve) => {
+      this.getGamesAllYears().then((data) => {
+        resolve(data);
+      });
+    });
+    let settings = new Promise((resolve, reject) => {
+      this.getSettings().then((data) => {
+        console.log(data);
+        resolve(data);
+      }).catch((error) => {
+        reject('Keine Settings -> starte allSeed()');
+      });
+    });
+    return Promise.all([clubs, allGames, settings])   
   }
   
   buildActualClubs(){
@@ -86,86 +96,105 @@ export class LigaDataProvider {
     console.log('buildActualClubs()');
     this.lastYears.forEach(element => {
       element.games.forEach(element => {
-          this.addClub(element.Team1.TeamName); 
-          promises.push(element.Team1.Teamname); 
-      })
-    })
+        promises.push( new Promise (resolve =>{
+          this.addClub(element.Team1.TeamName)
+          .then(response =>{
+            console.log(element.Team1.TeamName + ' hinzugefügt')
+            resolve(element.Team1.TeamName);
+          })
+          .catch(error =>{resolve('redundant')});   
+        }));  
+      }); 
+    }); 
     return Promise.all(promises);
-    
   }
 
-   addClub(clubName){
+  addClub(clubName){
     let club = {
         _id: clubName,
         gegner: {}
     }
-    this.dbController.update(this.clubsDb, club);
-      
+    return this.dbController.update(this.clubsDb, club);
   }
-  
-
   
   getSettings(){
     return this.dbController.getDataById(this.settingsDb, 'years');
   }
+
   getClubs(){
     return this.dbController.getData(this.clubsDb);
   }
+
   getClub(clubName){
     return this.dbController.getDataById(this.clubsDb, clubName);
   }
+
   getGamesAllYears(){
     return this.dbController.getData(this.lastYearsDb);
   }
+
   getGamesOneYear(year){
     this.dbController.getDataById(this.lastYearsDb, year).then((data) =>{
       return data;
     })
   }
-  refreshActualClubs(){
-    this.actualClubs = {};
-    this.getClubs().then((data) => {
-      this.actualClubs = data;
-    });
-  }
-  
-  seedAll(){
-    
+
+  seedAll(){ 
     let baseUrl = 'https://www.openligadb.de/api/getmatchdata/bl1/';
     
-    this.settings = {
-       _id: 'years',
+    let settings = {
+      _id: 'years',
+      years: {
+        2014: true,
+        2015: true,
+        2016: true
+      }
     }
-    let promises = [];
-    for(let i = 2014 ; i < new Date().getFullYear()+1; i++){
-        console.log('Hole Daten aus dem Jahr ' + (i));
-        this.settings[i] = true;
-        let allGamedays = [];
-        this.apiController.getData(baseUrl + (i).toString()).subscribe(data => {
-          data.forEach(element => {
-            allGamedays.push(element);
-          });
-          let year = {
-            _id: (i).toString(),
-            games: allGamedays
-          };
-          this.dbController.update(this.lastYearsDb,year).then((response) =>{
-            console.log(response);
-            promises.push(response);
-          });
-        }) 
-    }
-      this.dbController.update(this.settingsDb, this.settings).then((response) => {
-        console.log(response);
-        promises.push(response);
-      })
-      return Promise.all(promises);
   
-      
+    let promises = [];
+    promises.push( new Promise(resolve => {
+      this.dbController.update(this.settingsDb, settings).then(response =>{
+        resolve('settings gespeichert');
+      });
+    }));
+    Object.keys(settings.years).forEach(element => {
+      if (settings.years[element] === true){
+        console.log('Jahr ' + element + ' wird ausgewertet');
+        promises.push( new Promise(resolve =>{
+          this.getGamesOfYear(element).then(response => {
+            resolve(response);
+          })
+        }))
+      }
+    });
+
+    return Promise.all(promises);
+
+  
+     
   }
+  
+  getGamesOfYear(year) {
+    
+    let baseUrl = 'https://www.openligadb.de/api/getmatchdata/bl1/';
+    let allGamedays = [];
 
-  newClub(game){
-
+    let games = new Promise (resolve =>{
+      this.apiController.getData(baseUrl + year).subscribe(data =>{
+        data.forEach(element => {
+          allGamedays.push(element);
+        });
+        let obj = {
+          _id: (year).toString(),
+          games: allGamedays
+        };
+        this.dbController.update(this.lastYearsDb, obj).then(response =>{
+          resolve('Jahr ' + year + ' gespeichert');
+        });
+      });
+    });
+    
+    return Promise.all([games]); 
   }
 
   setResult(game){
@@ -190,53 +219,12 @@ export class LigaDataProvider {
     
   }
   
-
-  setClub(clubName){
-    let clubsDB = this.dbController.getDb('clubs');
-    this.dbController.getDataById(clubsDB,clubName).then(
-      (data) => {
-        console.log(data);
-      }
-    ).catch((err) => {
-      let club = {
-        _id : clubName
-      }
-      this.dbController.create(clubsDB, club);
-    })
-  }
-
-
-  checkIfActual(){
-
-  }
-
-
-  getNewGamedays(){
-    let baseUrl_lastChange = "https://www.openligadb.de/api/getlastchangedate/bl1/2017/";
-    let baseUrl_actualYear ="https://www.openligadb.de/api/getmatchdata/bl1/2017"
-    this.apiController.getData(baseUrl_lastChange + 1).subscribe((data) => {
-      console.log(data);
-      let date = new Date(data);
-      
-    });
-    this.apiController.getData(baseUrl_actualYear).subscribe((data) => {
-      console.log(data);
-    })
-  }
-
-  
-   
   setStorageLocal(key, value){
     this.storage.set(key, value);
   }
   getStorageLocal(key){ 
     return this.storage.get(key);
    }
-
-  equaliseGameDay(data){
-    console.log(data);
-
-  }
 
   showToast(whatsUp){
     let toastText;
