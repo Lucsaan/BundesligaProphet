@@ -56,6 +56,8 @@ export class LigaDataProvider {
         });
       }else {
         console.log('Vereine der letzten Jahre vorhanden');
+        this.actualClubs = response[0];
+        this.addScoresToClubs();
         this.loader.dismiss();
       }
 
@@ -108,6 +110,57 @@ export class LigaDataProvider {
     }); 
     return Promise.all(promises);
   }
+  
+  addScoresToClubs(){
+    console.log(this.lastYears);
+    Object.keys(this.lastYears).forEach(element => {
+      console.log(this.lastYears[element]._id);
+      this.lastYears[element].games.forEach(element => {
+        this.setResultToClub(element);
+      });
+    });
+  }
+
+  setResultToClub(game){
+    
+    let name_Team1 = game.Team1.TeamName;
+    let name_Team2 = game.Team2.TeamName;
+    
+    if(game.MatchResults.length < 2){
+      return;
+    }
+    this.getClub(name_Team1).then(data => {
+      let club = data;
+      if(!club.gegner[name_Team2]){
+        club.gegner[name_Team2] = [];
+      }
+      club.gegner[name_Team2].push({
+        goalsOpponent: game.MatchResults[0].PointsTeam1,
+        ownGoals: game.MatchResults[0].PointsTeam2,
+        home: true
+      })
+      this.dbController.update(this.clubsDb, club);
+
+    });
+    
+     
+    // this.dbController.getDataById(clubsDb, name_Team1).then((data) => {
+    //   console.log(data);
+    //   let club = data;
+    //   if(!club.gegner[name_Team2]){
+    //     club.gegner[name_Team2] = [];
+    //   }
+    //   club.gegner[name_Team2].push({
+    //     goalsOpponent: game.MatchResults[0].PointsTeam1,
+    //     ownGoals: game.MatchResults[0].PointsTeam2,
+    //     home: true
+    //   });
+    //   this.dbController.update(clubsDb, club);
+      
+    // }); 
+    
+  }
+  
 
   addClub(clubName){
     let club = {
@@ -134,9 +187,7 @@ export class LigaDataProvider {
   }
 
   getGamesOneYear(year){
-    this.dbController.getDataById(this.lastYearsDb, year).then((data) =>{
-      return data;
-    })
+    return this.dbController.getDataById(this.lastYearsDb, year);
   }
 
   seedAll(){ 
@@ -147,7 +198,8 @@ export class LigaDataProvider {
       years: {
         2014: true,
         2015: true,
-        2016: true
+        2016: true,
+        2017: true
       }
     }
   
@@ -197,27 +249,6 @@ export class LigaDataProvider {
     return Promise.all([games]); 
   }
 
-  setResult(game){
-    let clubsDb = this.dbController.getDb('clubs');
-    let name_Team1 = game.Team1.TeamName;
-    let name_Team2 = game.Team2.TeamName;
-     
-    // this.dbController.getDataById(clubsDb, name_Team1).then((data) => {
-    //   console.log(data);
-    //   let club = data;
-    //   if(!club.gegner[name_Team2]){
-    //     club.gegner[name_Team2] = [];
-    //   }
-    //   club.gegner[name_Team2].push({
-    //     goalsOpponent: game.MatchResults[0].PointsTeam1,
-    //     ownGoals: game.MatchResults[0].PointsTeam2,
-    //     home: true
-    //   });
-    //   this.dbController.update(clubsDb, club);
-      
-    // }); 
-    
-  }
   
   setStorageLocal(key, value){
     this.storage.set(key, value);
