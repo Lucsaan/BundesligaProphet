@@ -18,7 +18,6 @@ import { DbControllerProvider } from '../providers/db-controller/db-controller';
 import { ApiControllerProvider } from '../providers/api-controller/api-controller';
 
 
-
 @NgModule({
   declarations: [
     MyApp,

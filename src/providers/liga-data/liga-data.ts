@@ -8,6 +8,8 @@ import { LoadingController } from 'ionic-angular';
 import { ApiControllerProvider } from '../api-controller/api-controller';
 import { DbControllerProvider } from '../db-controller/db-controller';
 import { Observable } from "rxjs/Observable";
+import { Club } from '../../models/Club/club';
+import { Score } from '../../models/Club/score';
 
 @Injectable()
 export class LigaDataProvider {
@@ -36,11 +38,26 @@ export class LigaDataProvider {
       this.clubsDb = this.dbController.getDb('clubs');
       
       this.loader = this.presentLoading();
-      this.initData();  
+      //this.initData();  
+      let club = new Club('Freiburger SC');
+    let score = new Score('Hamburg', 12345, 1, 0);
+    
+    console.log(score);
+    console.log(club);
+    club.addScore(score);
+    console.log(JSON.stringify(club));
+    this.addClub(club).then(response=> {
+      this.getClubs().then(data =>{
+        console.log(data);
+      });
+    });
+
         
   }
 
   initData(){
+
+    
     
     console.log('Initialisierung: initData()');
     this.loadData().then((response) => {
@@ -162,11 +179,7 @@ export class LigaDataProvider {
   }
   
 
-  addClub(clubName){
-    let club = {
-        _id: clubName,
-        gegner: {}
-    }
+  addClub(club){
     return this.dbController.update(this.clubsDb, club);
   }
   
