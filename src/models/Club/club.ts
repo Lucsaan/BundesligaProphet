@@ -5,23 +5,38 @@ import { Score } from "./score";
 
 
 export class Club {
-    _id: string;
+    readonly _id: string;
     _rev?: string;
-    opponents: {};
+    opponent: {};
 
-    constructor(name: string,){
+    constructor(name: string, data?){
+        
         this._id = name;
 
+        if (data === undefined){
+            return;
+        }
+
+        this._rev = data._rev;
+        this.setOpponent(data.opponent);  
+        
     }
 
     getName(){
         return this._id;
     }
+    setOpponent(opponent){
+        if(opponent === undefined){
+            this.opponent = {};
+            return;
+        }
+        this.opponent = opponent;
+    }
     addOpponent(gameId){
-        // if (!this.opponents.hasOwnProperty(opponent.name)){
-        //     let score = new Score(opponent.gameId)
-        //     let opponent = new Opponent(opponent.name )
-        // }
+       
+    }
+    opponentExists(clubName){
+        return this.opponent.hasOwnProperty(clubName) ?  true : false;
     }
     
     

@@ -1,23 +1,14 @@
 export class Score {
     
-    constructor(
-        private readonly opponent:string, 
-        private readonly gameId: number,
-        private readonly goalsOwn: number,
-        private readonly goalsOpponent: number
-    ){}
+    public readonly goalsOwn: number;
+    public readonly goalsOpponent: number;
+    public readonly home: boolean;
 
-    getOpponent(){
-        return this.opponent;
+    constructor(goalsOwn, goalsOpponent, home){
+        this.goalsOwn = goalsOwn;
+        this.goalsOpponent = goalsOpponent;
+        this.home = home;
     }
-    getGameId(){
-        return this.gameId;
-    }
-    getGoalsOwn(){
-        return this.goalsOwn;
-    }
-    getAchievedGoald(){
-        return this.goalsOpponent;
-    }
+
 
 }
