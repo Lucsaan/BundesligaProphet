@@ -124,7 +124,6 @@ export class LigaDataProvider {
       if(this.gameIds.length === 0){
         this.gameIds = {};
       }
-      
       for(let year of this.lastYears){
         for(let game of year.games){
           let name_Team1 = game.Team1.TeamName;
@@ -134,14 +133,13 @@ export class LigaDataProvider {
           if(game.MatchResults.length < 2){
             return;
           }
-
-          if(!club.hasOwnProperty(name_Team2)){
-            club.opponent[name_Team2] = [];
+          
+          if(!club.opponent.hasOwnProperty(name_Team2)){
+            club.opponent[name_Team2] = {};
           }
-          club.opponent[name_Team2].push(
+          club.opponent[name_Team2][game.MatchId] = 
             new Score(game.MatchResults[0].PointsTeam1, game.MatchResults[0].PointsTeam2, true)
-          );
-        
+          
         }   
       }
       console.log(this.actualClubs);
