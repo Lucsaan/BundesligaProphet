@@ -9,7 +9,7 @@ import { ApiControllerProvider } from '../api-controller/api-controller';
 import { DbControllerProvider } from '../db-controller/db-controller';
 import { Observable } from "rxjs/Observable";
 import { Club } from '../../models/Club/club';
-import { Score } from '../../models/Club/score';
+import { Score } from '../../models/club/score';
 
 @Injectable()
 export class LigaDataProvider {
@@ -38,26 +38,11 @@ export class LigaDataProvider {
       this.clubsDb = this.dbController.getDb('clubs');
       
       this.loader = this.presentLoading();
-      //this.initData();  
-      let club = new Club('Freiburger SC');
-    let score = new Score('Hamburg', 12345, 1, 0);
-    
-    console.log(score);
-    console.log(club);
-    club.addScore(score);
-    console.log(JSON.stringify(club));
-    this.addClub(club).then(response=> {
-      this.getClubs().then(data =>{
-        console.log(data);
-      });
-    });
-
+      this.initData();  
         
   }
 
   initData(){
-
-    
     
     console.log('Initialisierung: initData()');
     this.loadData().then((response) => {
@@ -67,7 +52,7 @@ export class LigaDataProvider {
       this.lastYears = response[1];
       if(response[0][0] === undefined){
         console.log('Noch keine Clubs gespeichert');
-        this.buildActualClubs().then(response =>{
+        this.seedClubs().then(response =>{
           console.log(response);
           this.initData();
         });
@@ -110,21 +95,24 @@ export class LigaDataProvider {
     return Promise.all([clubs, allGames, settings])   
   }
   
-  buildActualClubs(){
-    let promises = [];
+  seedClubs(){
     console.log('buildActualClubs()');
-    this.lastYears.forEach(element => {
-      element.games.forEach(element => {
-        promises.push( new Promise (resolve =>{
-          this.addClub(element.Team1.TeamName)
-          .then(response =>{
-            console.log(element.Team1.TeamName + ' hinzugefügt')
-            resolve(element.Team1.TeamName);
-          })
-          .catch(error =>{resolve('redundant')});   
-        }));  
-      }); 
-    }); 
+    
+    let promises = [];
+
+    for(let year of this.lastYears){
+      for(let game of year.games){
+        let club = new Promise(resolve => {
+          this.addClub(game.Team1.TeamName).then(response => {
+            console.log(game.Team1.TeamName + ' hinzugefügt');
+            resolve(game.Team1.TeamName);
+          }).catch (error => {
+            resolve('redundant');
+          });
+        });
+        promises.push(club);
+      }
+    }
     return Promise.all(promises);
   }
   
@@ -179,7 +167,11 @@ export class LigaDataProvider {
   }
   
 
-  addClub(club){
+  addClub(clubName){
+    let club = {
+        _id: clubName,
+        gegner: {}
+    }
     return this.dbController.update(this.clubsDb, club);
   }
   

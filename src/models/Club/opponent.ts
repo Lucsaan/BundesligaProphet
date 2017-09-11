@@ -3,12 +3,19 @@
 
 import { Score } from "./score";
 
-export interface Opponent {
-   
-        name: string,
-        gameId: number,
-        goalsOwn: number,
-        goalsOpponent: number,
-        scores : Array<Score>
-  
+export class Opponent {
+    constructor(
+        private readonly name: string,
+       private scores : Array<Score> = []
+    ){}
+
+    getName(){
+        return this.name;
+    }
+    getScores(){
+        return this.scores;
+    }
+    addScore(score: Score){
+        this.scores.push(score);
+    }
 }

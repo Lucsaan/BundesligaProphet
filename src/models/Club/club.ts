@@ -1,11 +1,13 @@
 
 
 import { Opponent } from "./opponent";
+import { Score } from "./score";
+
 
 export class Club {
     _id: string;
     _rev?: string;
-    opponent: {Opponent};
+    opponents: {};
 
     constructor(name: string,){
         this._id = name;
@@ -15,8 +17,11 @@ export class Club {
     getName(){
         return this._id;
     }
-    addOpponent(opponent:Opponent){
-        
+    addOpponent(gameId){
+        // if (!this.opponents.hasOwnProperty(opponent.name)){
+        //     let score = new Score(opponent.gameId)
+        //     let opponent = new Opponent(opponent.name )
+        // }
     }
     
     
