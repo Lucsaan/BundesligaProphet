@@ -45,43 +45,39 @@ export class LigaDataProvider {
         
   }
 
-  initData(){
-    
-    console.log('Initialisierung: initData()');
+  initData() : void{
+    console.log('\nInitialisierung: initData()');
     this.loadData().then((response) => {
       console.log('Settings vorhanden');
-      console.log('Spieldaten der letzten Jahre vorhanden');
-      console.log(response);
+      console.log('Sämtliche Spieldaten vorhanden');
       this.lastYears = response[1];
-      console.log(this.actualClubs);
       if(this.actualClubs === undefined){
-        console.log('Noch keine Clubs gespeichert');
+        console.log('Speichere Clubs');
         this.seedClubs().then(response =>{
-          console.log(response);
           this.initData();
         });
       }else {
-        console.log('Vereine der letzten Jahre vorhanden');
-        this.seedScores();
+        console.log('Sämtliche Vereine vorhanden');
+        if(!this.actualClubs[Object.keys(this.actualClubs)[0]].opponentExists()){
+          this.seedScores();
+        }else{
+          console.log('Sämtliche Ergebnisse vorhanden');
+        }
         this.loader.dismiss();
       }
-
     }).catch(reason => {
       console.log(reason);
       this.seedAll().then(response =>{
-        console.log(response);
         this.initData();
       });   
     });
   }
-  
   loadData(){
     let clubs = new Promise((resolve) => {
       this.getClubs().then((data)=>{
         resolve(data);
       });
     });
-    
     let allGames = new Promise((resolve) => {
       this.getGamesAllYears().then((data) => {
         resolve(data);
@@ -89,7 +85,6 @@ export class LigaDataProvider {
     });
     let settings = new Promise((resolve, reject) => {
       this.getSettings().then((data) => {
-        console.log(data);
         resolve(data);
       }).catch((error) => {
         reject('Keine Settings -> starte allSeed()');
@@ -97,7 +92,6 @@ export class LigaDataProvider {
     });
     return Promise.all([clubs, allGames, settings])   
   }
-  
   seedClubs(){
     console.log('buildActualClubs()');
     let promises = [];
@@ -116,76 +110,68 @@ export class LigaDataProvider {
     }
     return Promise.all(promises);
   }
-
   seedScores(){
-    console.log('seedScores()');
-    this.getGameIds().then(data =>{
-      this.gameIds = data;
-      if(this.gameIds.length === 0){
-        this.gameIds = {};
-      }
-      for(let year of this.lastYears){
-        for(let game of year.games){
-          let name_Team1 = game.Team1.TeamName;
-          let name_Team2 = game.Team2.TeamName;
-          let club = this.actualClubs[name_Team1];
+    console.log('Verarbeite Ergebnisse');
+    let i = 0;
+    let j = 0;
+    let k = 0;
+    let l = 0;
+    for(let year of this.lastYears){
+      for(let game of year.games){
+        
+        if(game.MatchResults.length < 2){
+          console.log('noch nicht gespielt');
+           continue;
+        } 
 
-          if(game.MatchResults.length < 2){
-            return;
-          }
-          
-          if(!club.opponent.hasOwnProperty(name_Team2)){
-            club.opponent[name_Team2] = {};
-          }
-          club.opponent[name_Team2][game.MatchId] = 
-            new Score(game.MatchResults[0].PointsTeam1, game.MatchResults[0].PointsTeam2, true)
-          
-        }   
-      }
-      console.log(this.actualClubs);
+        let name_homeClub = game.Team1.TeamName;
+        let goals_homeClub = game.MatchResults[0].PointsTeam1;
 
-    });
- 
-      // club.gegner[name_Team2].push({
-      //   goalsOpponent: game.MatchResults[0].PointsTeam1,
-      //   ownGoals: game.MatchResults[0].PointsTeam2,
-      //   home: true
-      // })
-      // this.dbController.update(this.clubsDb, club);
+        let name_awayClub = game.Team2.TeamName
+        let goals_awayClub = game.MatchResults[0].PointsTeam2; 
 
-   
+        let homeClub = this.actualClubs[name_homeClub];
+        let awayClub = this.actualClubs[name_awayClub];
+        
+        this.addOpponent(homeClub, name_awayClub) ? i++ : k++;
+        this.addOpponent(awayClub, name_homeClub) ? i++ : k++;
+        this.addScore(game, homeClub, name_awayClub, true, goals_homeClub, goals_awayClub) ? j++ : l++;
+        this.addScore(game, awayClub, name_homeClub, false, goals_awayClub, goals_homeClub) ? j++ : l++;
+      }   
+    }
     
-     
-    // this.dbController.getDataById(clubsDb, name_Team1).then((data) => {
-    //   console.log(data);
-    //   let club = data;
-    //   if(!club.gegner[name_Team2]){
-    //     club.gegner[name_Team2] = [];
-    //   }
-    //   club.gegner[name_Team2].push({
-    //     goalsOpponent: game.MatchResults[0].PointsTeam1,
-    //     ownGoals: game.MatchResults[0].PointsTeam2,
-    //     home: true
-    //   });
-    //   this.dbController.update(clubsDb, club);
-      
-    // }); 
-    
+    console.log(i + ' Gegner in die Vereine eingetragen');
+    console.log(j + ' Spielergebnisse in die Vereine eingetragen ');
+    console.log(l + ' Spielergebnisse waren bereits vorhanden');
+    for(let club in this.actualClubs){
+      this.dbController.update(this.clubsDb, this.actualClubs[club]);
+    }
+    this.getClubs().then(clubs => {
+      console.log('Alles erledigt');
+    });    
   }
-  
-
   addClub(clubName){
-    
     let club = new Club(clubName);
     return this.dbController.update(this.clubsDb, club);
   }
-  
+  addOpponent(club, clubName){
+    if(club.opponents.hasOwnProperty(clubName)){
+      return false;
+    }
+    club.opponents[clubName] = {scores: {}};
+    return true;  
+  }
+  addScore(game, club, nameOpponent, atHome, goalsClub, goalsOpponent){
+    if(club.opponents[nameOpponent].scores[game.MatchID]){
+      return false;
+    }
+    club.opponents[nameOpponent].scores[game.MatchID] = new Score(goalsClub, goalsOpponent, atHome);
+    return true;    
+  }   
   getSettings(){
     return this.dbController.getDataById(this.settingsDb, 'years');
   }
-
-  getClubs(){
-    
+  getClubs(){  
     return new Promise(resolve =>{
       this.dbController.getData(this.clubsDb).then(data => {
         let clubs: any = {};
@@ -198,13 +184,10 @@ export class LigaDataProvider {
           resolve(this.actualClubs);
         }else {
           resolve(data);
-        }
-        
+        }  
       });
-    });
-    
+    });  
   }
-
   getClub(clubName){
     return new Promise(resolve =>{
       this.dbController.getDataById(this.clubsDb, clubName).then(data =>{
@@ -217,15 +200,12 @@ export class LigaDataProvider {
   getGameIds(){
     return this.dbController.getData(this.gameIdsDb);
   }
-
   getGamesAllYears(){
     return this.dbController.getData(this.lastYearsDb);
   }
-
   getGamesOneYear(year){
     return this.dbController.getDataById(this.lastYearsDb, year);
   }
-
   seedAll(){ 
     let baseUrl = 'https://www.openligadb.de/api/getmatchdata/bl1/';
     
@@ -256,12 +236,8 @@ export class LigaDataProvider {
       }
     });
 
-    return Promise.all(promises);
-
-  
-     
+    return Promise.all(promises);   
   }
-  
   getGamesOfYear(year) {
     
     let baseUrl = 'https://www.openligadb.de/api/getmatchdata/bl1/';
@@ -284,15 +260,12 @@ export class LigaDataProvider {
     
     return Promise.all([games]); 
   }
-
-  
   setStorageLocal(key, value){
     this.storage.set(key, value);
   }
   getStorageLocal(key){ 
     return this.storage.get(key);
-   }
-
+  }
   showToast(whatsUp){
     let toastText;
 
@@ -311,7 +284,6 @@ export class LigaDataProvider {
     });
     toast.present();
   }  
-
   presentLoading() {
     let loader = this.loadingCtrl.create({
       content: "Verarbeite Daten für den ersten Gebrauch"

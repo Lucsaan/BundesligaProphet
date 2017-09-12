@@ -1,6 +1,4 @@
 
-
-
 import { Score } from "./score";
 
 export class Opponent {
