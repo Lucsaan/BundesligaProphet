@@ -62,6 +62,7 @@ export class LigaDataProvider {
           this.seedScores();
         }else{
           console.log('Sämtliche Ergebnisse vorhanden');
+          console.log(this.actualClubs);
         }
         this.loader.dismiss();
       }

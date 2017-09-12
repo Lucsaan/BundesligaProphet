@@ -16,6 +16,7 @@ import { LigaDataProvider } from '../providers/liga-data/liga-data';
 import { IonicStorageModule } from '@ionic/storage';
 import { DbControllerProvider } from '../providers/db-controller/db-controller';
 import { ApiControllerProvider } from '../providers/api-controller/api-controller';
+import { ProphetEngineProvider } from '../providers/prophet-engine/prophet-engine';
 
 
 @NgModule({
@@ -50,6 +51,7 @@ import { ApiControllerProvider } from '../providers/api-controller/api-controlle
     LigaDataProvider,
     DbControllerProvider,
     ApiControllerProvider,
+    ProphetEngineProvider,
     
   ]
 })
