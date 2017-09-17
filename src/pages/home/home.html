@@ -5,31 +5,25 @@
 </ion-header>
 
 <ion-content padding>
-    <ion-list *ngFor="let gameDay of ligaData.data">
-        <ion-list-header>
-            Spieltag {{gameDay.day}}
-        </ion-list-header>
-
-        <ion-item *ngFor="let game of gameDay.games" ion-wrap>
-            <ion-avatar item-start small>
-                <img src={{game.Team1.TeamIconUrl}}>
-            </ion-avatar>
-            <span>{{game.Team1.TeamName}} </span> {{game.MatchResults[1]?.PointsTeam1}} : {{game.MatchResults[1]?.PointsTeam2}}
-            <span>{{game.Team2.TeamName}}</span>
-            <ion-avatar item-end small>
-                <img src={{game.Team2.TeamIconUrl}}>
-            </ion-avatar>
+    <ion-list *ngFor="let game of ligaData.actualYear.games" (click)="prophet.prophecy(game.Team1, game.Team2, $event)">
+        <!-- <ion-list-header>
+            Spieltag {{game?.Group.GroupOrderID}}
+        </ion-list-header> -->
 
 
-            <span style="text-align:center"></span>
-        </ion-item>
+        <ion-avatar item-start small>
+            <img src={{game.Team1.TeamIconUrl}}>
+        </ion-avatar>
+        <span>{{game.Team1.TeamName}} </span> {{game.MatchResults[1]?.PointsTeam1}} : {{game.MatchResults[1]?.PointsTeam2}}
+        <span>{{game.Team2.TeamName}}</span>
+        <ion-avatar item-end small>
+            <img src={{game.Team2.TeamIconUrl}}>
+        </ion-avatar>
+
+
+        <span style="text-align:center"></span>
+
 
     </ion-list>
-
-    <button ion-button (click)="ligaData.resetOnlineApi()">Alles Löschen</button>
-    <button ion-button (click)="ligaData.getAll()">Lade Api</button>
-
-
-
 
 </ion-content>

@@ -21,7 +21,7 @@ export class LigaDataProvider {
   clubsDb: any;
   loader: any;
 
-  actualYear: any;
+  actualYear: any = {};
   lastYears: any;
   settings: any = [];
   actualClubs: any;
@@ -41,6 +41,7 @@ export class LigaDataProvider {
       this.gameIdsDb = this.dbController.getDb('gameIds');
       
       this.loader = this.presentLoading();
+      this.actualYear.games = [];
       this.initData();  
         
   }
@@ -51,6 +52,7 @@ export class LigaDataProvider {
       console.log('Settings vorhanden');
       console.log('Sämtliche Spieldaten vorhanden');
       this.lastYears = response[1];
+      this.actualYear = this.lastYears[this.lastYears.length-1];
       if(this.actualClubs === undefined){
         console.log('Speichere Clubs');
         this.seedClubs().then(response =>{
@@ -63,6 +65,7 @@ export class LigaDataProvider {
         }else{
           console.log('Sämtliche Ergebnisse vorhanden');
           console.log(this.actualClubs);
+          console.log(this.actualYear.games);
         }
         this.loader.dismiss();
       }
@@ -133,11 +136,12 @@ export class LigaDataProvider {
 
         let homeClub = this.actualClubs[name_homeClub];
         let awayClub = this.actualClubs[name_awayClub];
+        let date = game.MatchDateTime;
         
         this.addOpponent(homeClub, name_awayClub) ? i++ : k++;
         this.addOpponent(awayClub, name_homeClub) ? i++ : k++;
-        this.addScore(game, homeClub, name_awayClub, true, goals_homeClub, goals_awayClub) ? j++ : l++;
-        this.addScore(game, awayClub, name_homeClub, false, goals_awayClub, goals_homeClub) ? j++ : l++;
+        this.addScore(game, homeClub, name_awayClub, true, goals_homeClub, goals_awayClub, date) ? j++ : l++;
+        this.addScore(game, awayClub, name_homeClub, false, goals_awayClub, goals_homeClub, date) ? j++ : l++;
       }   
     }
     
@@ -162,11 +166,11 @@ export class LigaDataProvider {
     club.opponents[clubName] = {scores: {}};
     return true;  
   }
-  addScore(game, club, nameOpponent, atHome, goalsClub, goalsOpponent){
+  addScore(game, club, nameOpponent, atHome, goalsClub, goalsOpponent, date){
     if(club.opponents[nameOpponent].scores[game.MatchID]){
       return false;
     }
-    club.opponents[nameOpponent].scores[game.MatchID] = new Score(goalsClub, goalsOpponent, atHome);
+    club.opponents[nameOpponent].scores[game.MatchID] = new Score(goalsClub, goalsOpponent, atHome, date);
     return true;    
   }   
   getSettings(){
