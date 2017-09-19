@@ -51,6 +51,7 @@ export class LigaDataProvider {
     this.loadData().then((response) => {
       console.log('Settings vorhanden');
       console.log('Sämtliche Spieldaten vorhanden');
+      this.settings = response[2];
       this.lastYears = response[1];
       this.actualYear = this.lastYears[this.lastYears.length-1];
       if(this.actualClubs === undefined){

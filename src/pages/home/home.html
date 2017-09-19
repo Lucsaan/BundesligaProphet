@@ -5,7 +5,7 @@
 </ion-header>
 
 <ion-content padding>
-    <ion-list *ngFor="let game of ligaData.actualYear.games" (click)="prophet.prophecy(game.Team1, game.Team2, $event)">
+    <ion-list *ngFor="let game of ligaData.actualYear.games" (click)="prophet.getProphecy(game.Team1.TeamName, game.Team2.TeamName, $event)">
         <!-- <ion-list-header>
             Spieltag {{game?.Group.GroupOrderID}}
         </ion-list-header> -->
