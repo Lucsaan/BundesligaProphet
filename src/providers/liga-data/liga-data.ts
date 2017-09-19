@@ -42,6 +42,7 @@ export class LigaDataProvider {
       
       this.loader = this.presentLoading();
       this.actualYear.games = [];
+      
       this.initData();  
         
   }

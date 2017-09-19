@@ -2,6 +2,7 @@ import { Injectable } from '@angular/core';
 import { Http } from '@angular/http';
 import 'rxjs/add/operator/map';
 import { LigaDataProvider } from "../liga-data/liga-data";
+import { ToastController } from "ionic-angular";
 
 /*
   Generated class for the ProphetEngineProvider provider.
@@ -23,7 +24,7 @@ export class ProphetEngineProvider {
   maxYearDifference: number;
   fineTuneMultiplier: number;
 
-  constructor(public http: Http, public dataProvider : LigaDataProvider) {
+  constructor(public http: Http, public dataProvider : LigaDataProvider, public toastCtrl : ToastController) {
     console.log('Hello ProphetEngineProvider Provider');
   }
 
@@ -95,7 +96,7 @@ export class ProphetEngineProvider {
     }catch(err){
       console.log('Noch keine Spiele gegeneinander gespielt');
       let gegnerString = this.analyseSameOpponents();
-      alert('Noch keine Spiele gegeneinander gespielt\n' + gegnerString );
+      this.showToast('Noch keine Spiele gegeneinander gespielt\n' + gegnerString );
     }
   
   }
@@ -144,7 +145,7 @@ export class ProphetEngineProvider {
 
     console.log('Ergebnis: ' + Math.round(og/divider) + ' : ' + (Math.round(og/divider) - (Math.round(gd/divider))));
     let gegnerString = this.analyseSameOpponents();
-    alert('Ergebnis aus direkten Spielen: ' + Math.round(og/divider) + ' : ' + (Math.round(og/divider) - (Math.round(gd/divider))) + '\n' + gegnerString);
+    this.showToast('Ergebnis aus direkten Spielen: ' + Math.round(og/divider) + ' : ' + (Math.round(og/divider) - (Math.round(gd/divider))) + '\n' + gegnerString);
     return {'gd': gd, 'og': og, 'divider': divider}
 
   }
@@ -208,6 +209,15 @@ export class ProphetEngineProvider {
     }
     console.log('gd: ' + (gd/divider) + ' og: ' + Math.round(og/divider));
     return {'gd': gd/divider, 'og' : og/divider};
+  }
+
+  showToast(toasties){
+    let toast = this.toastCtrl.create({
+      message: toasties,
+      duration: 10000,
+      position: 'top'
+    });
+    toast.present();
   }
  
 
