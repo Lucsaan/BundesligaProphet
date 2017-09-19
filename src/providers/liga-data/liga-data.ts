@@ -130,10 +130,10 @@ export class LigaDataProvider {
         } 
 
         let name_homeClub = game.Team1.TeamName;
-        let goals_homeClub = game.MatchResults[0].PointsTeam1;
+        let goals_homeClub = game.MatchResults[1].PointsTeam1;
 
         let name_awayClub = game.Team2.TeamName
-        let goals_awayClub = game.MatchResults[0].PointsTeam2; 
+        let goals_awayClub = game.MatchResults[1].PointsTeam2; 
 
         let homeClub = this.actualClubs[name_homeClub];
         let awayClub = this.actualClubs[name_awayClub];
@@ -219,9 +219,6 @@ export class LigaDataProvider {
     let settings = {
       _id: 'years',
       years: {
-        2014: true,
-        2015: true,
-        2016: true,
         2017: true
       }
     }

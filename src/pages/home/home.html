@@ -11,17 +11,29 @@
         </ion-list-header> -->
 
 
-        <ion-avatar item-start small>
-            <img src={{game.Team1.TeamIconUrl}}>
-        </ion-avatar>
-        <span>{{game.Team1.TeamName}} </span> {{game.MatchResults[1]?.PointsTeam1}} : {{game.MatchResults[1]?.PointsTeam2}}
-        <span>{{game.Team2.TeamName}}</span>
-        <ion-avatar item-end small>
-            <img src={{game.Team2.TeamIconUrl}}>
-        </ion-avatar>
+
+        <ion-item>
+            <ion-avatar item-start small>
+                <img src={{game.Team1.TeamIconUrl}} style="width: 70%; height: 70%">
+            </ion-avatar>
+            <h2>{{game.Team1.TeamName}}</h2>
+            <ion-avatar item-end>
+                <h1>{{game.MatchResults[1]?.PointsTeam1}} </h1>
+            </ion-avatar>
+
+        </ion-item>
+        <ion-item>
+            <ion-avatar item-start small>
+                <img src={{game.Team2.TeamIconUrl}} style="width: 70%; height: 70%">
+            </ion-avatar>
+
+            <h2> {{game.Team2.TeamName}} </h2>
+            <ion-avatar item-end>
+                <h1>{{game.MatchResults[1]?.PointsTeam2}}</h1>
+            </ion-avatar>
+        </ion-item>
 
 
-        <span style="text-align:center"></span>
 
 
     </ion-list>

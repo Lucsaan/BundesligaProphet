@@ -38,6 +38,7 @@ export class ProphetEngineProvider {
     console.log(this.club2);
     console.log(event);
     this.analyseDirektGames();
+    this.analyseSameOpponents();
     
     
 
@@ -47,17 +48,20 @@ export class ProphetEngineProvider {
   getClubData(club){
     return this.dataProvider.actualClubs[club];
   }
-  getYearMultiplier(date){
+  getYearMultiplier(score){
+    let x = 2;
     this.maxYearDifference;
-    let x = this.maxYearDifference - (this.highestYear - (new Date(date).getFullYear()));
-    return Math.pow(2,x);
+    let y = this.maxYearDifference - (this.highestYear - (new Date(score.date).getFullYear()));
+    if (score.gameYear === "1. Fußball-Bundesliga 2017/2018"){
+      x += 1;
+    }
+    console.log(x + ' hoch ' + y);
+    return Math.pow(x,y);
   }
   analyseDirektGames(){
-    let gd = 0;
-    let og = 0; 
-    let divider = 0;
+    
     let sumScores;
-    let compareableScore;
+    
     let diffGDMultiplier;
     let diffOGMultiplier;
 
@@ -84,8 +88,23 @@ export class ProphetEngineProvider {
     this.maxYearDifference = this.highestYear - this.lowestYear;
     console.log(this.maxYearDifference); 
     
-    sumScores = Object.keys(this.club1.opponents[this.club2._id].scores).length;
-    console.log('Summe Scores: ' + sumScores);
+    try{
+      sumScores = Object.keys(this.club1.opponents[this.club2._id].scores).length;
+      console.log('Summe Scores: ' + sumScores);
+      this.calculateScores(sumScores);
+    }catch(err){
+      console.log('Noch keine Spiele gegeneinander gespielt');
+      let gegnerString = this.analyseSameOpponents();
+      alert('Noch keine Spiele gegeneinander gespielt\n' + gegnerString );
+    }
+  
+  }
+
+  calculateScores(sumScores){
+    let gd = 0;
+    let og = 0; 
+    let divider = 0;
+    let compareableScore;
     let index = 0;
 
     for(let scoreIndex in this.club1.opponents[this.club2._id].scores){
@@ -93,7 +112,7 @@ export class ProphetEngineProvider {
       
       let score = this.club1.opponents[this.club2._id].scores[scoreIndex];
       if(++index === sumScores){
-        if(score.gameYear === "1. Fußball-Bundesliga 2016/2017"){
+        if(score.gameYear === "1. Fußball-Bundesliga 2017/2018"){
           compareableScore = {'gd' : Math.round(gd/divider), 'og' : Math.round(og/divider)};
           let prophecyDiffGD = compareableScore.gd - (score.goalsOwn - score.goalsOpponent);
           let prophecyDiffOG = compareableScore.og - (score.goalsOwn);
@@ -103,11 +122,15 @@ export class ProphetEngineProvider {
         }
       }
       console.log(score);
-      let yearMultiplier = this.getYearMultiplier(score.date); 
+      let yearMultiplier = this.getYearMultiplier(score); 
+      console.log('yearmultiplier ' + yearMultiplier);
 
       if(score.home){
-        gd += (score.goalsOwn - score.goalsOpponent) * this.homeMultiplier * yearMultiplier;
-        og += (score.goalsOwn) * this.homeMultiplier * yearMultiplier;
+        gd += (score.goalsOwn - score.goalsOpponent) * this.homeMultiplier;
+        gd += (score.goalsOwn - score.goalsOpponent) * yearMultiplier;
+        
+        og += (score.goalsOwn) * this.homeMultiplier;
+        og += (score.goalsOwn) * yearMultiplier;
         divider += this.homeMultiplier;   
       }else {
         gd += (score.goalsOwn - score.goalsOpponent) * yearMultiplier;
@@ -118,12 +141,73 @@ export class ProphetEngineProvider {
       
       console.log({'gd': gd, 'og': og, 'divider': divider});
     }
+
     console.log('Ergebnis: ' + Math.round(og/divider) + ' : ' + (Math.round(og/divider) - (Math.round(gd/divider))));
-      //alert('Ergebnis: ' + Math.round(og/divider) + ' : ' + (Math.round(og/divider) - (Math.round(gd/divider))));
+    let gegnerString = this.analyseSameOpponents();
+    alert('Ergebnis aus direkten Spielen: ' + Math.round(og/divider) + ' : ' + (Math.round(og/divider) - (Math.round(gd/divider))) + '\n' + gegnerString);
     return {'gd': gd, 'og': og, 'divider': divider}
+
   }
   analyseSameOpponents(){
-    return {gd: 'gd', og: 'og', multiplier: 'multiplier'}
+    console.log('Analysiere gemeinsame Gegner');
+    let gd = 0, og = 0, divider = 0;
+        
+    for(let opponent_club1 in this.club1.opponents){
+      for(let opponent_club2 in this.club2.opponents){
+        if(opponent_club1 === opponent_club2){
+          console.log('Gemeinsamer Gegner: ' + opponent_club1);
+          let score_club1 = this.analyseScores(opponent_club1,this.club1, true);
+          let score_club2 = this.analyseScores(opponent_club2,this.club2, false);
+          gd += (score_club1.gd - score_club2.gd);
+          console.log(gd);
+          og += (score_club1.og - score_club2.og);
+          console.log(og);
+          divider++;
+        }
+      }
+      
+    }
+    if (og < 1){
+      gd += og;
+      og = 0;
+
+    }
+    if((og - gd) < 0){
+      og -= (og - gd);
+    }
+    if(divider === 0){
+      console.log('Noch keine gemeinsamen Gegner')
+      //return {'gd': -1}
+      return 'Noch keine gemeinsamen Gegner';
+    }
+    console.log('gd ' + gd);
+    console.log('og ' + og);
+    console.log('divider' + divider);
+    
+    console.log('Ergebnis aus Gegneranalyse: og: ' + og + ' gd: ' + gd + ' divider: ' + divider);
+    //return {'gd': gd, 'og': og, 'divider' : divider};
+    return 'Ergebnis aus Gegneranalyse: ' + Math.round(og/divider) + ' : ' + Math.round((og - gd)/divider);
+  }
+
+  analyseScores(opponent,club, home){
+    let gd = 0, og = 0, divider = 0;
+        
+    for(let scoreIndex in club.opponents[opponent].scores){
+      let multiplier = 1;
+      let score = club.opponents[opponent].scores[scoreIndex];
+      console.log(score);
+      if(score.home === home){
+        multiplier = 2;
+      }
+      
+      gd += (score.goalsOwn - score.goalsOpponent) * multiplier;
+      og += score.goalsOwn * multiplier;
+      divider += multiplier;
+      
+      
+    }
+    console.log('gd: ' + (gd/divider) + ' og: ' + Math.round(og/divider));
+    return {'gd': gd/divider, 'og' : og/divider};
   }
  
 
