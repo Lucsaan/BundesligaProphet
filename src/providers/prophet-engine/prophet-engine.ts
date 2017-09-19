@@ -18,10 +18,10 @@ export class ProphetEngineProvider {
   directMultiplier: number = 2;
   goalDifference: number = 0;
   ownGoals: number = 0;
-  highestYear = 0;
-  lowestYear;
-  maxYearDifference;
-
+  highestYear: number = 0;
+  lowestYear: number;
+  maxYearDifference: number;
+  fineTuneMultiplier: number;
 
   constructor(public http: Http, public dataProvider : LigaDataProvider) {
     console.log('Hello ProphetEngineProvider Provider');
@@ -56,8 +56,12 @@ export class ProphetEngineProvider {
     let gd = 0;
     let og = 0; 
     let divider = 0;
-    
+    let sumScores;
+    let compareableScore;
+    let diffGDMultiplier;
+    let diffOGMultiplier;
 
+    
     for(let yearIndex in this.dataProvider.settings.years){
       let year = this.dataProvider.settings.years[yearIndex];
       if(year !== true){
@@ -80,24 +84,42 @@ export class ProphetEngineProvider {
     this.maxYearDifference = this.highestYear - this.lowestYear;
     console.log(this.maxYearDifference); 
     
+    sumScores = Object.keys(this.club1.opponents[this.club2._id].scores).length;
+    console.log('Summe Scores: ' + sumScores);
+    let index = 0;
+
     for(let scoreIndex in this.club1.opponents[this.club2._id].scores){
+      console.log(index);
+      
       let score = this.club1.opponents[this.club2._id].scores[scoreIndex];
+      if(++index === sumScores){
+        if(score.gameYear === "1. Fußball-Bundesliga 2016/2017"){
+          compareableScore = {'gd' : Math.round(gd/divider), 'og' : Math.round(og/divider)};
+          let prophecyDiffGD = compareableScore.gd - (score.goalsOwn - score.goalsOpponent);
+          let prophecyDiffOG = compareableScore.og - (score.goalsOwn);
+          console.log('GD: ' + prophecyDiffGD);
+          console.log('OG: ' + prophecyDiffOG);
+          console.log(compareableScore);
+        }
+      }
       console.log(score);
       let yearMultiplier = this.getYearMultiplier(score.date); 
 
-    if(score.home){
-      gd += (score.goalsOwn - score.goalsOpponent) * this.homeMultiplier * yearMultiplier;
-      og += (score.goalsOwn) * this.homeMultiplier * yearMultiplier;
-      divider += this.homeMultiplier;   
-    }else {
-      gd += (score.goalsOwn - score.goalsOpponent) * yearMultiplier;
-      og += (score.goalsOwn) * yearMultiplier;
-      divider++;
+      if(score.home){
+        gd += (score.goalsOwn - score.goalsOpponent) * this.homeMultiplier * yearMultiplier;
+        og += (score.goalsOwn) * this.homeMultiplier * yearMultiplier;
+        divider += this.homeMultiplier;   
+      }else {
+        gd += (score.goalsOwn - score.goalsOpponent) * yearMultiplier;
+        og += (score.goalsOwn) * yearMultiplier;
+        divider++;
+      }
+      divider += yearMultiplier;
+      
+      console.log({'gd': gd, 'og': og, 'divider': divider});
     }
-    divider += yearMultiplier;
-    console.log({'gd': gd, 'og': og, 'divider': divider});
-
-    }
+    console.log('Ergebnis: ' + Math.round(og/divider) + ' : ' + (Math.round(og/divider) - (Math.round(gd/divider))));
+      //alert('Ergebnis: ' + Math.round(og/divider) + ' : ' + (Math.round(og/divider) - (Math.round(gd/divider))));
     return {'gd': gd, 'og': og, 'divider': divider}
   }
   analyseSameOpponents(){

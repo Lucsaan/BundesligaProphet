@@ -138,11 +138,12 @@ export class LigaDataProvider {
         let homeClub = this.actualClubs[name_homeClub];
         let awayClub = this.actualClubs[name_awayClub];
         let date = game.MatchDateTime;
+        let gameYear = game.LeagueName;
         
         this.addOpponent(homeClub, name_awayClub) ? i++ : k++;
         this.addOpponent(awayClub, name_homeClub) ? i++ : k++;
-        this.addScore(game, homeClub, name_awayClub, true, goals_homeClub, goals_awayClub, date) ? j++ : l++;
-        this.addScore(game, awayClub, name_homeClub, false, goals_awayClub, goals_homeClub, date) ? j++ : l++;
+        this.addScore(game, homeClub, name_awayClub, true, goals_homeClub, goals_awayClub, date, gameYear) ? j++ : l++;
+        this.addScore(game, awayClub, name_homeClub, false, goals_awayClub, goals_homeClub, date, gameYear) ? j++ : l++;
       }   
     }
     
@@ -167,11 +168,11 @@ export class LigaDataProvider {
     club.opponents[clubName] = {scores: {}};
     return true;  
   }
-  addScore(game, club, nameOpponent, atHome, goalsClub, goalsOpponent, date){
+  addScore(game, club, nameOpponent, atHome, goalsClub, goalsOpponent, date, gameYear){
     if(club.opponents[nameOpponent].scores[game.MatchID]){
       return false;
     }
-    club.opponents[nameOpponent].scores[game.MatchID] = new Score(goalsClub, goalsOpponent, atHome, date);
+    club.opponents[nameOpponent].scores[game.MatchID] = new Score(goalsClub, goalsOpponent, atHome, date, gameYear);
     return true;    
   }   
   getSettings(){
