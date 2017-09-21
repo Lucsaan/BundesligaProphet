@@ -12,4 +12,14 @@ export class HomePage {
   constructor(public navCtrl: NavController, public ligaData:LigaDataProvider, public prophet: ProphetEngineProvider) {
   }
 
+  doRefresh(event){
+    this.ligaData.resetDatabases().then(response =>{
+      console.log('Datenbanken ready for refresh');
+      this.ligaData.initDatabases();
+      this.ligaData.initData();
+      event.complete();
+      
+    })
+  }
+
 }

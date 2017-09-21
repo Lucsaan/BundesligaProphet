@@ -36,16 +36,20 @@ export class LigaDataProvider {
     public apiController: ApiControllerProvider, 
     public dbController : DbControllerProvider ) {
 
-      this.lastYearsDb = this.dbController.getDb('lastYearsDb');
-      this.settingsDb = this.dbController.getDb('settings');
-      this.clubsDb = this.dbController.getDb('clubs');
-      this.gameIdsDb = this.dbController.getDb('gameIds');
+      
       
       this.loader = this.presentLoading();
       this.actualYear.games = [];
       
+      this.initDatabases();
       this.initData();  
         
+  }
+  initDatabases(){
+    this.lastYearsDb = this.dbController.getDb('lastYearsDb');
+    this.settingsDb = this.dbController.getDb('settings');
+    this.clubsDb = this.dbController.getDb('clubs');
+    this.gameIdsDb = this.dbController.getDb('gameIds');
   }
 
   initData() : void{
@@ -310,6 +314,32 @@ export class LigaDataProvider {
       }
       console.log(this.actualYearSorted);
     }
+  }
+  resetDatabases(){
+    let promises = [];
+
+    promises.push(new Promise(resolve =>{
+      this.clubsDb.destroy().then(function(response){
+        console.log('Datenbank gelöscht');
+        resolve('Datenbank gelöscht');
+      })
+    }));
+    promises.push(new Promise(resolve => {
+      this.lastYearsDb.destroy().then(function(response){
+        console.log('Datenbank LastYears gelöscht');
+        resolve('Datenbank LastYears gelöscht');
+        
+      })
+    }));
+    promises.push(new Promise(resolve => {
+      this.settingsDb.destroy().then(function(response){
+        console.log('Datenbank Settings gelöscht');
+        resolve('Datenbank Settings gelöscht');
+      })
+    }));
+    
+
+    return Promise.all(promises);
   }
   
 
