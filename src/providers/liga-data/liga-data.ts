@@ -15,6 +15,7 @@ import { Score } from '../../models/Club/score';
 export class LigaDataProvider {
 
   actualYearDb: any;
+  gamesDb: any;
   lastYearsDb: any;
   settingsDb: any;
   gameIdsDb: any;
@@ -25,9 +26,12 @@ export class LigaDataProvider {
   actualYearSorted: any;
   lastYears: any;
   settings: any = [];
-  actualClubs: any;
-  gameIds: any;
+  actualClubs: any = {};
 
+  noSettings: boolean = true;
+  noData: boolean = true;
+  noClubs: boolean = true;
+  
   constructor(
     public http: Http, 
     public storage:Storage, 
@@ -36,20 +40,57 @@ export class LigaDataProvider {
     public apiController: ApiControllerProvider, 
     public dbController : DbControllerProvider ) {
 
-      
+      this.gamesDb = this.dbController.getDb('gamesDb');
+    this.settingsDb = this.dbController.getDb('settings');
+    this.clubsDb = this.dbController.getDb('clubs');
+    this.lastYearsDb = this.dbController.getDb('lastYears');
       
       this.loader = this.presentLoading();
       this.actualYear.games = [];
       
-      this.initDatabases();
-      this.initData();  
+      this.initData();
+      //this.init();  
         
+    }
+  
+  init(){
+    if(this.noSettings){
+      this.getSettings();
+      return;
+    }
+    if(this.noData){
+      this.getGames();
+    }
   }
-  initDatabases(){
-    this.lastYearsDb = this.dbController.getDb('lastYearsDb');
-    this.settingsDb = this.dbController.getDb('settings');
-    this.clubsDb = this.dbController.getDb('clubs');
-    this.gameIdsDb = this.dbController.getDb('gameIds');
+  getSettings(){
+    this.dbController.getDataById(this.settingsDb, 'years').then(settings=>{
+      this.settings = settings;
+      console.log(this.settings);
+      this.noSettings = false;
+      this.init();
+    }).catch(error=>{
+      this.setSettings().then(response=>{
+        if(response.ok){
+          console.log('Settings geseedet');
+          this.init();
+        }
+      });
+    });
+   
+  }
+  setSettings(){
+    let settings = {
+      _id: 'years',
+      years: {
+        2017: true
+      }
+    }
+    return this.dbController.update(this.settingsDb, settings);  
+  }
+  getGames(){
+    this.dbController.getData(this.gamesDb).then(data=>{
+
+    })
   }
 
   initData() : void{
@@ -61,7 +102,8 @@ export class LigaDataProvider {
       this.lastYears = response[1];
       this.actualYear = this.lastYears[this.lastYears.length-1];
       this.sortActualYear();
-      if(this.actualClubs === undefined){
+      console.log(Object.keys(this.actualClubs).length);
+      if(Object.keys(this.actualClubs).length === 0){
         console.log('Speichere Clubs');
         this.seedClubs().then(response =>{
           this.initData();
@@ -96,7 +138,7 @@ export class LigaDataProvider {
       });
     });
     let settings = new Promise((resolve, reject) => {
-      this.getSettings().then((data) => {
+      this.getSettingsli().then((data) => {
         resolve(data);
       }).catch((error) => {
         reject('Keine Settings -> starte allSeed()');
@@ -121,6 +163,9 @@ export class LigaDataProvider {
       }
     }
     return Promise.all(promises);
+  }
+  getSettingsli(){
+    return this.dbController.getDataById(this.settingsDb, 'years');
   }
   seedScores(){
     console.log('Verarbeite Ergebnisse');
@@ -182,9 +227,7 @@ export class LigaDataProvider {
     club.opponents[nameOpponent].scores[game.MatchID] = new Score(goalsClub, goalsOpponent, atHome, date, gameYear);
     return true;    
   }   
-  getSettings(){
-    return this.dbController.getDataById(this.settingsDb, 'years');
-  }
+  
   getClubs(){  
     return new Promise(resolve =>{
       this.dbController.getData(this.clubsDb).then(data => {
