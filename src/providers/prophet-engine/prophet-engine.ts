@@ -78,8 +78,8 @@ export class ProphetEngineProvider {
     divider += (1 + sameOpponentsScores.divider);
     console.log('Mit indirekten Spielen:');
     console.log('gd: ' + gd + ' og: ' + og + ' divider: ' + divider);
-    toastie = "Ich prophezeihe " + Math.round(og/divider) + ' : ' + Math.round((og - gd)/divider);  
-    toastie += "Den Obulus lasst da. Und jetzt verschwindet";
+    toastie = "Ich prophezeihe     " + Math.round(og/divider) + ' : ' + Math.round((og - gd)/divider);  
+    toastie += "\nDen Obulus lasst da. Und jetzt verschwindet";
     this.showToast(toastie);
 
   }
