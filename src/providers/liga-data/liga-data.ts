@@ -22,6 +22,7 @@ export class LigaDataProvider {
   loader: any;
 
   actualYear: any = {};
+  actualYearSorted: any;
   lastYears: any;
   settings: any = [];
   actualClubs: any;
@@ -55,6 +56,7 @@ export class LigaDataProvider {
       this.settings = response[2];
       this.lastYears = response[1];
       this.actualYear = this.lastYears[this.lastYears.length-1];
+      this.sortActualYear();
       if(this.actualClubs === undefined){
         console.log('Speichere Clubs');
         this.seedClubs().then(response =>{
@@ -295,6 +297,19 @@ export class LigaDataProvider {
     });
     loader.present();
     return loader;
+  }
+  sortActualYear(){
+    console.log('sortActualYear');
+    this.actualYearSorted = {};
+    for(let game of this.actualYear){
+      for(let i = 1; i <= this.actualYear[this.actualYear.length -1].GroupOrderID; i++){
+        if(i === game.GroupOrderID){
+          this.actualYearSorted.i = [];
+          this.actualYearSorted[i].push(game);
+        }
+      }
+      console.log(this.actualYearSorted);
+    }
   }
   
 
