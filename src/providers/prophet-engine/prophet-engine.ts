@@ -43,18 +43,18 @@ export class ProphetEngineProvider {
     let toastie = "";
 
     if(directGamesScores.og < 0 && sameOpponentsScores.og < 0){
-      this.showToast('Noch keine auswertbaren Spiele :-(');
+      this.showToast('Mich plagt Migräne. Lasset ab von mir');
       return;
     }
     if(directGamesScores.og < 0){
-      toastie += 'Noch keine Spiele direkt gegeneinander gespielt\n';
-      toastie += 'Ergebnis aus Spielen gemeinsamer Gegner: ' + Math.round(sameOpponentsScores.og/sameOpponentsScores.divider) + ' : ' + (Math.round(sameOpponentsScores.og/sameOpponentsScores.divider) - (Math.round(sameOpponentsScores.gd/sameOpponentsScores.divider)));
+      toastie += 'Da wurde noch kein Spiel gegeneinander gespielt\n';
+      toastie += 'Die Glaskugel ächzt!!!\nLass mal sehen...      ' + Math.round(sameOpponentsScores.og/sameOpponentsScores.divider) + ' : ' + (Math.round(sameOpponentsScores.og/sameOpponentsScores.divider) - (Math.round(sameOpponentsScores.gd/sameOpponentsScores.divider)));
       this.showToast(toastie);
       return;
     }
     if(sameOpponentsScores.og < 0){
       toastie += 'Noch keine Spiele mit gemeinsamen Gegnern\n';
-      toastie += 'Ergebnis aus direkt gegeneinander gespielten Spielen : ' + Math.round(directGamesScores.og/directGamesScores.divider) + ' : ' + (Math.round(directGamesScores.og/directGamesScores.divider) - (Math.round(directGamesScores.gd/directGamesScores.divider)));
+      toastie += 'Huh. Eine Herausforderung!!!\nIch sage...      ' + Math.round(directGamesScores.og/directGamesScores.divider) + ' : ' + (Math.round(directGamesScores.og/directGamesScores.divider) - (Math.round(directGamesScores.gd/directGamesScores.divider)));
       this.showToast(toastie);
       return;
     }
@@ -79,6 +79,7 @@ export class ProphetEngineProvider {
     console.log('Mit indirekten Spielen:');
     console.log('gd: ' + gd + ' og: ' + og + ' divider: ' + divider);
     toastie = "Ich prophezeihe " + Math.round(og/divider) + ' : ' + Math.round((og - gd)/divider);  
+    toastie += "Den Obulus lasst da. Und jetzt verschwindet";
     this.showToast(toastie);
 
   }
