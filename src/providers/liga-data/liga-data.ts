@@ -27,6 +27,8 @@ export class LigaDataProvider {
   lastYears: any;
   settings: any = [];
   actualClubs: any = {};
+  data: any;
+  games:  any = {};
 
   noSettings: boolean = true;
   noData: boolean = true;
@@ -40,7 +42,7 @@ export class LigaDataProvider {
     public apiController: ApiControllerProvider, 
     public dbController : DbControllerProvider ) {
 
-      this.gamesDb = this.dbController.getDb('gamesDb');
+    this.gamesDb = this.dbController.getDb('gamesDb');
     this.settingsDb = this.dbController.getDb('settings');
     this.clubsDb = this.dbController.getDb('clubs');
     this.lastYearsDb = this.dbController.getDb('lastYears');
@@ -48,8 +50,8 @@ export class LigaDataProvider {
       this.loader = this.presentLoading();
       this.actualYear.games = [];
       
-      this.initData();
-      //this.init();  
+      //this.initData();
+      this.init();  
         
     }
   
@@ -59,8 +61,14 @@ export class LigaDataProvider {
       return;
     }
     if(this.noData){
-      this.getGames();
+      console.log('Settingsvorhanden');
+      console.log('Hole Daten');
+      this.loadGamesData();
+      return;
     }
+    console.log(this.games);
+    this.loader.dismiss();
+
   }
   getSettings(){
     this.dbController.getDataById(this.settingsDb, 'years').then(settings=>{
@@ -82,15 +90,49 @@ export class LigaDataProvider {
     let settings = {
       _id: 'years',
       years: {
+        2016: true,
         2017: true
       }
     }
     return this.dbController.update(this.settingsDb, settings);  
   }
-  getGames(){
+  loadGamesData(){
     this.dbController.getData(this.gamesDb).then(data=>{
+      console.log(data);
+      this.data = data;
+      console.log(this.data.length);
+      if(this.data < 1){
+        this.getGames(this.settings).then(response=>{
+          this.init();  
+        });
+      }else {
+        for(let year of this.data){
+          this.games[year._id] = year;
+        }
+        this.noData = false;
+        this.init();
+      }
+    });
+  }
+  getGames(settings){
+    let promises = [];
+    promises.push( new Promise(resolve => {
+      this.dbController.update(this.settingsDb, settings).then(response =>{
+        resolve('settings gespeichert');
+      });
+    }));
+    Object.keys(settings.years).forEach(element => {
+      if (settings.years[element] === true){
+        console.log('Jahr ' + element + ' wird ausgewertet');
+        promises.push( new Promise(resolve =>{
+          this.getGamesOfYear(element).then(response => {
+            resolve(response);
+          })
+        }))
+      }
+    });
 
-    })
+    return Promise.all(promises);   
   }
 
   initData() : void{
@@ -115,6 +157,7 @@ export class LigaDataProvider {
         }else{
           console.log('Sämtliche Ergebnisse vorhanden');
           console.log(this.actualClubs);
+          console.log(this.lastYears);
           console.log(this.actualYear.games);
         }
         this.loader.dismiss();
@@ -269,6 +312,7 @@ export class LigaDataProvider {
     let settings = {
       _id: 'years',
       years: {
+        2016: true,
         2017: true
       }
     }
@@ -283,7 +327,7 @@ export class LigaDataProvider {
       if (settings.years[element] === true){
         console.log('Jahr ' + element + ' wird ausgewertet');
         promises.push( new Promise(resolve =>{
-          this.getGamesOfYear(element).then(response => {
+          this.getGamesOfYear2(element).then(response => {
             resolve(response);
           })
         }))
@@ -292,7 +336,7 @@ export class LigaDataProvider {
 
     return Promise.all(promises);   
   }
-  getGamesOfYear(year) {
+  getGamesOfYear2(year) {
     
     let baseUrl = 'https://www.openligadb.de/api/getmatchdata/bl1/';
     let allGamedays = [];
@@ -314,6 +358,56 @@ export class LigaDataProvider {
     
     return Promise.all([games]); 
   }
+  getGamesOfYear(year) {
+    let baseUrl = 'https://www.openligadb.de/api/getmatchdata/bl1/';
+    let allGamedays = [];
+
+    let games = new Promise (resolve =>{
+      this.apiController.getData(baseUrl + year).subscribe(data =>{
+        data.forEach(element => {
+
+          allGamedays.push(element);
+        });
+        let separateGamedays = this.seperateGamedays(allGamedays);
+        let obj = {
+          _id: (year).toString(),
+          games: separateGamedays
+        };
+        this.dbController.update(this.gamesDb, obj).then(response =>{
+          resolve('Jahr ' + year + ' gespeichert');
+        });
+      });
+    });
+    
+    return Promise.all([games]); 
+  }
+  seperateGamedays(allGamedays){
+    console.log('separiere Spieltage');
+    let maxGameday = 1;
+    let obj = {gameday: {}};
+    let games = [];
+    for(let game of allGamedays){
+      if(game.Group.GroupOrderID > maxGameday){
+         obj.gameday[games[0].Group.GroupOrderID] =  {
+          _id : games[0].Group.GroupName,
+          games: games
+        }
+        games = []; 
+        maxGameday = game.Group.GroupOrderID;     
+      }  
+      games.push(game);
+      
+    }
+    obj.gameday[games[0].Group.GroupOrderID] =  {
+          _id : games[0].Group.GroupName,
+          games: games
+        }
+    console.log(obj);
+    return obj;
+  }
+
+
+
   setStorageLocal(key, value){
     this.storage.set(key, value);
   }

@@ -6,11 +6,8 @@
 
 <ion-content padding>
     <ion-refresher (ionRefresh)="doRefresh($event)">
-        <ion-refresher-content
-            pullingText="Pull to refresh..."
-            refreshingText="Erneuere Spieldaten"
-        >
-            
+        <ion-refresher-content pullingText="Pull to refresh..." refreshingText="Erneuere Spieldaten">
+
         </ion-refresher-content>
     </ion-refresher>
     <ion-list *ngFor="let game of ligaData.actualYear.games" (click)="prophet.getProphecy(game.Team1.TeamName, game.Team2.TeamName, $event)">
