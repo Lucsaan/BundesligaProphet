@@ -1,6 +1,7 @@
 import { Component } from '@angular/core';
 import { IonicPage, NavController, NavParams } from 'ionic-angular';
 import { LigaDataProvider } from '../../providers/liga-data/liga-data';
+import { HomePage } from '../home/home';
 
 /**
  * Generated class for the SettingsPage page.
@@ -26,6 +27,7 @@ export class SettingsPage {
   resetAll(){
     this.ligaData.resetDatabases().then(response =>{
       this.ligaData.loadDatabases(false);
+      this.navCtrl.push(HomePage);
     });
   }
 
