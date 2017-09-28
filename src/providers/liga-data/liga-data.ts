@@ -52,7 +52,7 @@ export class LigaDataProvider {
       this.actualYear.games = [];
       
       this.initData();
-      this.init();  
+      //this.init();  
         
     }
   
@@ -127,6 +127,61 @@ export class LigaDataProvider {
       }
     });
   }
+
+  update(){
+    let updated = false;
+    let allGamedays = [];
+    this.apiController.getData('https://www.openligadb.de/api/getmatchdata/bl1/2017').subscribe(data =>{
+        data.forEach(element => {
+          allGamedays.push(element);
+        });
+        console.log(this.lastYears[this.lastYears.length-1]);
+      for(let i = 0; i < allGamedays.length; i++){
+        if(this.lastYears[this.lastYears.length-1].games[i].MatchIsFinished !== allGamedays[i].MatchIsFinished){
+          updated = true;
+          this.lastYears[this.lastYears.length-1].games[i] = allGamedays[i];
+          this.setScore(allGamedays[i]);
+        }
+      }
+      if(updated){
+        this.showToast('Neue Spiele hinzugefügt', 3);
+        this.actualYear = this.lastYears[this.lastYears.length-1];
+        console.log(this.lastYears);
+        this.dbController.update(this.lastYearsDb, this.actualYear).then(response => {
+          console.log(response);
+        });
+      }else {
+        this.showToast('Spiele sind auf dem neuesten Stand', 3);
+      }
+    });
+  }
+  setScore(game){
+    console.log('Verarbeite Ergebnisse');
+    let i = 0;
+    let j = 0;
+    let k = 0;
+    let l = 0;
+    
+
+    let name_homeClub = game.Team1.TeamName;
+    let goals_homeClub = game.MatchResults[1].PointsTeam1;
+
+    let name_awayClub = game.Team2.TeamName
+    let goals_awayClub = game.MatchResults[1].PointsTeam2; 
+
+    let homeClub = this.actualClubs[name_homeClub];
+    let awayClub = this.actualClubs[name_awayClub];
+    let date = game.MatchDateTime;
+    let gameYear = game.LeagueName;
+        
+    this.addOpponent(homeClub, name_awayClub) ? i++ : k++;
+    this.addOpponent(awayClub, name_homeClub) ? i++ : k++;
+    this.addScore(game, homeClub, name_awayClub, true, goals_homeClub, goals_awayClub, date, gameYear) ? j++ : l++;
+    this.addScore(game, awayClub, name_homeClub, false, goals_awayClub, goals_homeClub, date, gameYear) ? j++ : l++;
+         
+    
+  }
+
   getGames(config){
     let promises = [];
     promises.push( new Promise(resolve => {
@@ -198,9 +253,7 @@ export class LigaDataProvider {
       console.log('Config vorhanden');
       console.log('Sämtliche Spieldaten vorhanden');
       this.config = response[2];
-      this.lastYears = response[1];
       this.actualYear = this.lastYears[this.lastYears.length-1];
-      this.sortActualYear();
       console.log(Object.keys(this.actualClubs).length);
       if(Object.keys(this.actualClubs).length === 0){
         console.log('Speichere Clubs');
@@ -234,6 +287,7 @@ export class LigaDataProvider {
     });
     let allGames = new Promise((resolve) => {
       this.getGamesAllYears().then((data) => {
+        this.lastYears = data;
         resolve(data);
       });
     });
@@ -471,24 +525,14 @@ export class LigaDataProvider {
   getStorageLocal(key){ 
     return this.storage.get(key);
   }
-  showToast(whatsUp){
-    let toastText;
-
-    switch(whatsUp){
-      case 'noNetwork': 
-        'Keine Netzwerkverbindung. Möglicherweile sind die Daten nicht auf dem neuesten Stand.'
-      break;
-
-      default: 'Irgendwas, aber nit so wichtig, ist passiert... Relax!!!'
-      break; 
-    }
-
+  showToast(toasties, time){
     let toast = this.toastCtrl.create({
-      message: toastText,
-      duration: 3000
+      message: toasties,
+      duration: time * 1000,
+      position: 'top'
     });
     toast.present();
-  }  
+  }
   presentLoading() {
     let loader = this.loadingCtrl.create({
       content: "Verarbeite Daten für den ersten Gebrauch"

@@ -14,6 +14,7 @@ export class HomePage {
 
   doRefresh(refresher){
     console.log('AjAjAj');
+    this.ligaData.update();
     refresher.complete();
     // this.ligaData.resetDatabases().then(response =>{
     //   console.log('Datenbanken ready for refresh');
