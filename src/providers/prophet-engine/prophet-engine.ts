@@ -104,8 +104,8 @@ export class ProphetEngineProvider {
     let diffOGMultiplier;
 
     
-    for(let yearIndex in this.dataProvider.settings.years){
-      let year = this.dataProvider.settings.years[yearIndex];
+    for(let yearIndex in this.dataProvider.config.years){
+      let year = this.dataProvider.config.years[yearIndex];
       if(year !== true){
         continue;
       }

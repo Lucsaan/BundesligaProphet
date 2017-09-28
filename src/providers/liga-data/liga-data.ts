@@ -17,7 +17,7 @@ export class LigaDataProvider {
   actualYearDb: any;
   gamesDb: any;
   lastYearsDb: any;
-  settingsDb: any;
+  configDb: any;
   gameIdsDb: any;
   clubsDb: any;
   loader: any;
@@ -25,12 +25,13 @@ export class LigaDataProvider {
   actualYear: any = {};
   actualYearSorted: any;
   lastYears: any;
-  settings: any = [];
+  config: any = [];
   actualClubs: any = {};
   data: any;
   games:  any = {};
+  clubs: any = [];
 
-  noSettings: boolean = true;
+  noConfig: boolean = true;
   noData: boolean = true;
   noClubs: boolean = true;
   
@@ -43,66 +44,78 @@ export class LigaDataProvider {
     public dbController : DbControllerProvider ) {
 
     this.gamesDb = this.dbController.getDb('gamesDb');
-    this.settingsDb = this.dbController.getDb('settings');
+    this.configDb = this.dbController.getDb('config');
     this.clubsDb = this.dbController.getDb('clubs');
     this.lastYearsDb = this.dbController.getDb('lastYears');
       
       this.loader = this.presentLoading();
       this.actualYear.games = [];
       
-      //this.initData();
+      this.initData();
       this.init();  
         
     }
   
   init(){
-    if(this.noSettings){
-      this.getSettings();
+    if(this.noConfig){
+      console.log('Keine Config vorhanden');
+      this.getConfig();
       return;
     }
     if(this.noData){
-      console.log('Settingsvorhanden');
+      console.log('Config vorhanden');
       console.log('Hole Daten');
       this.loadGamesData();
       return;
     }
     console.log(this.games);
-    this.loader.dismiss();
+    if(this.noClubs){
+      this.loadClubs();
+    }
+    console.log('Clubs geladen');
+    console.log(this.clubs);
+    
 
   }
-  getSettings(){
-    this.dbController.getDataById(this.settingsDb, 'years').then(settings=>{
-      this.settings = settings;
-      console.log(this.settings);
-      this.noSettings = false;
+  getConfig(){
+    this.dbController.getDataById(this.configDb, 'years').then(config=>{
+      this.config = config;
+      console.log('Config geladen');
+      console.log(this.config);
+      this.noConfig = false;
+      console.log('Restart');
       this.init();
     }).catch(error=>{
-      this.setSettings().then(response=>{
+      this.setConfig().then(response=>{
         if(response.ok){
-          console.log('Settings geseedet');
+          console.log('Config geseedet');
+          console.log('Restart');
           this.init();
         }
+      }).catch(err => {
+        console.log('Config bereits vorhanden');
       });
     });
    
   }
-  setSettings(){
-    let settings = {
+  setConfig(){
+    let config = {
       _id: 'years',
       years: {
         2016: true,
         2017: true
       }
     }
-    return this.dbController.update(this.settingsDb, settings);  
+    return this.dbController.update(this.configDb, config);  
   }
   loadGamesData(){
     this.dbController.getData(this.gamesDb).then(data=>{
       console.log(data);
       this.data = data;
-      console.log(this.data.length);
       if(this.data < 1){
-        this.getGames(this.settings).then(response=>{
+        console.log('Hole Daten von der Api')
+        this.getGames(this.config).then(response=>{
+          console.log('Restart');
           this.init();  
         });
       }else {
@@ -114,15 +127,15 @@ export class LigaDataProvider {
       }
     });
   }
-  getGames(settings){
+  getGames(config){
     let promises = [];
     promises.push( new Promise(resolve => {
-      this.dbController.update(this.settingsDb, settings).then(response =>{
-        resolve('settings gespeichert');
+      this.dbController.update(this.configDb, config).then(response =>{
+        resolve('Config gespeichert');
       });
     }));
-    Object.keys(settings.years).forEach(element => {
-      if (settings.years[element] === true){
+    Object.keys(config.years).forEach(element => {
+      if (config.years[element] === true){
         console.log('Jahr ' + element + ' wird ausgewertet');
         promises.push( new Promise(resolve =>{
           this.getGamesOfYear(element).then(response => {
@@ -134,13 +147,57 @@ export class LigaDataProvider {
 
     return Promise.all(promises);   
   }
+  loadClubs(){
+    this.getClubs().then(clubs => {
+      this.clubs = clubs;
+      if(this.clubs < 1){
+        console.log('Keine Clubs.');
+        this.seedClubs2();
+        // .then(resolve => {
+        //   this.noClubs = false;
+        //   this.init();
+        // });
+        
+      }
+    });
+  }
+  seedClubs2(){
+    console.log('Vereine werden erstellt');
+    let promises = [];
+    for(let key in this.games){
+      console.log(this.games[key]);
+      for(let gameday in this.games[key].games.gameday){
+        console.log(this.games[key].games.gameday[gameday]);
+        for(let game of this.games[key].games.gameday[gameday].games){
 
+        }
+        
+      }
+      
+    }
+
+
+    // for(let year of this.lastYears){
+    //   for(let game of year.games){
+    //     let club = new Promise(resolve => {
+    //       this.addClub(game.Team1.TeamName).then(response => {
+    //         console.log(game.Team1.TeamName + ' hinzugefügt');
+    //         resolve(game.Team1.TeamName);
+    //       }).catch (error => {
+    //         resolve('redundant');
+    //       });
+    //     });
+    //     promises.push(club);
+    //   }
+    // }
+    // return Promise.all(promises);
+  }
   initData() : void{
     console.log('\nInitialisierung: initData()');
     this.loadData().then((response) => {
-      console.log('Settings vorhanden');
+      console.log('Config vorhanden');
       console.log('Sämtliche Spieldaten vorhanden');
-      this.settings = response[2];
+      this.config = response[2];
       this.lastYears = response[1];
       this.actualYear = this.lastYears[this.lastYears.length-1];
       this.sortActualYear();
@@ -180,14 +237,14 @@ export class LigaDataProvider {
         resolve(data);
       });
     });
-    let settings = new Promise((resolve, reject) => {
-      this.getSettingsli().then((data) => {
+    let config = new Promise((resolve, reject) => {
+      this.getconfigli().then((data) => {
         resolve(data);
       }).catch((error) => {
-        reject('Keine Settings -> starte allSeed()');
+        reject('Keine Config -> starte allSeed()');
       });
     });
-    return Promise.all([clubs, allGames, settings])   
+    return Promise.all([clubs, allGames, config])   
   }
   seedClubs(){
     console.log('buildActualClubs()');
@@ -207,8 +264,9 @@ export class LigaDataProvider {
     }
     return Promise.all(promises);
   }
-  getSettingsli(){
-    return this.dbController.getDataById(this.settingsDb, 'years');
+  
+  getconfigli(){
+    return this.dbController.getDataById(this.configDb, 'years');
   }
   seedScores(){
     console.log('Verarbeite Ergebnisse');
@@ -309,7 +367,7 @@ export class LigaDataProvider {
   seedAll(){ 
     let baseUrl = 'https://www.openligadb.de/api/getmatchdata/bl1/';
     
-    let settings = {
+    let config = {
       _id: 'years',
       years: {
         2016: true,
@@ -319,12 +377,12 @@ export class LigaDataProvider {
   
     let promises = [];
     promises.push( new Promise(resolve => {
-      this.dbController.update(this.settingsDb, settings).then(response =>{
-        resolve('settings gespeichert');
+      this.dbController.update(this.configDb, config).then(response =>{
+        resolve('config gespeichert');
       });
     }));
-    Object.keys(settings.years).forEach(element => {
-      if (settings.years[element] === true){
+    Object.keys(config.years).forEach(element => {
+      if (config.years[element] === true){
         console.log('Jahr ' + element + ' wird ausgewertet');
         promises.push( new Promise(resolve =>{
           this.getGamesOfYear2(element).then(response => {
@@ -361,11 +419,10 @@ export class LigaDataProvider {
   getGamesOfYear(year) {
     let baseUrl = 'https://www.openligadb.de/api/getmatchdata/bl1/';
     let allGamedays = [];
-
+    
     let games = new Promise (resolve =>{
       this.apiController.getData(baseUrl + year).subscribe(data =>{
         data.forEach(element => {
-
           allGamedays.push(element);
         });
         let separateGamedays = this.seperateGamedays(allGamedays);
@@ -469,9 +526,9 @@ export class LigaDataProvider {
       })
     }));
     promises.push(new Promise(resolve => {
-      this.settingsDb.destroy().then(function(response){
-        console.log('Datenbank Settings gelöscht');
-        resolve('Datenbank Settings gelöscht');
+      this.configDb.destroy().then(function(response){
+        console.log('Datenbank Config gelöscht');
+        resolve('Datenbank Config gelöscht');
       })
     }));
     
