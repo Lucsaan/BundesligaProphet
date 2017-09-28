@@ -1,5 +1,6 @@
 import { Component } from '@angular/core';
 import { IonicPage, NavController, NavParams } from 'ionic-angular';
+import { LigaDataProvider } from '../../providers/liga-data/liga-data';
 
 /**
  * Generated class for the SettingsPage page.
@@ -15,11 +16,17 @@ import { IonicPage, NavController, NavParams } from 'ionic-angular';
 })
 export class SettingsPage {
 
-  constructor(public navCtrl: NavController, public navParams: NavParams) {
+  constructor(public navCtrl: NavController, public navParams: NavParams, public ligaData : LigaDataProvider) {
   }
 
   ionViewDidLoad() {
     console.log('ionViewDidLoad SettingsPage');
+  }
+
+  resetAll(){
+    this.ligaData.resetDatabases().then(response =>{
+      this.ligaData.loadDatabases(false);
+    });
   }
 
 }

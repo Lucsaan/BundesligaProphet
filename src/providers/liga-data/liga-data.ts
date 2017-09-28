@@ -43,10 +43,7 @@ export class LigaDataProvider {
     public apiController: ApiControllerProvider, 
     public dbController : DbControllerProvider ) {
 
-    this.gamesDb = this.dbController.getDb('gamesDb');
-    this.configDb = this.dbController.getDb('config');
-    this.clubsDb = this.dbController.getDb('clubs');
-    this.lastYearsDb = this.dbController.getDb('lastYears');
+      this.loadDatabases(true);
       
       this.loader = this.presentLoading();
       this.actualYear.games = [];
@@ -578,6 +575,24 @@ export class LigaDataProvider {
     
 
     return Promise.all(promises);
+  }
+  loadDatabases(forInit){
+    this.gamesDb = this.dbController.getDb('gamesDb');
+    this.configDb = this.dbController.getDb('config');
+    this.clubsDb = this.dbController.getDb('clubs');
+    this.lastYearsDb = this.dbController.getDb('lastYears');
+    if(!forInit){
+      this.loader = this.presentLoading();
+      this.actualYear= {};
+      this.lastYears;
+      this.config= [];
+      this.actualClubs= {};
+      this.data;
+      this.games = {};
+      this.clubs = [];
+      this.actualYear.games = [];
+      this.initData();
+    }
   }
   
 
