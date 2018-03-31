@@ -27,7 +27,7 @@ export class SettingsPage {
   resetAll(){
     this.ligaData.resetDatabases().then(response =>{
       this.ligaData.loadDatabases(false);
-      this.navCtrl.push(HomePage);
+        this.navCtrl.parent.select(0);
     });
   }
 
