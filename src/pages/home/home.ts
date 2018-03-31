@@ -1,5 +1,5 @@
-import { Component } from '@angular/core';
-import { NavController } from 'ionic-angular';
+import {Component, ViewChild} from '@angular/core';
+import {Content, NavController} from 'ionic-angular';
 import { LigaDataProvider } from '../../providers/liga-data/liga-data';
 import { ProphetEngineProvider } from "../../providers/prophet-engine/prophet-engine";
 
@@ -9,13 +9,19 @@ import { ProphetEngineProvider } from "../../providers/prophet-engine/prophet-en
 })
 export class HomePage {
 
+  @ViewChild(Content) content: Content;
+
+  gameDay: string = '';
+
   constructor(public navCtrl: NavController, public ligaData:LigaDataProvider, public prophet: ProphetEngineProvider) {
   }
 
-  doRefresh(refresher){
+  doRefresh(refresher?){
     console.log('AjAjAj');
     this.ligaData.update();
-    refresher.complete();
+    if(refresher !== undefined) {
+        refresher.complete();
+    }
     // this.ligaData.resetDatabases().then(response =>{
     //   console.log('Datenbanken ready for refresh');
     //   this.ligaData.initDatabases();
@@ -24,5 +30,29 @@ export class HomePage {
       
     // })
   }
+
+  isNotSameGameDay(gameDay: string){
+    if(this.gameDay === gameDay){
+      return false;
+    }
+    this.gameDay = gameDay;
+    return true;
+  }
+
+  scrollTo() {
+      let elementId = '';
+      let done = false;
+      this.ligaData.actualYear.games.map((game) => {
+          if(game.MatchResults[1] === undefined && done === false){
+            elementId = game.MatchID;
+            done = true;
+          }
+      });
+      if(elementId !== ''){
+          let y = document.getElementById(elementId).offsetTop;
+          this.content.scrollTo(0, y - 60);
+      }
+  }
+
 
 }

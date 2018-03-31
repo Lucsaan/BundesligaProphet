@@ -1,6 +1,12 @@
 <ion-header>
     <ion-navbar>
-        <ion-title>Bundesliga</ion-title>
+        <ion-title>BundesligaProphet</ion-title>
+        <ion-buttons start>
+            <button ion-button (click)="doRefresh()"><ion-icon large name="refresh"></ion-icon></button>
+        </ion-buttons>
+        <ion-buttons end>
+            <button ion-button large (click)="scrollTo()">Aktuell</button>
+        </ion-buttons>
     </ion-navbar>
 </ion-header>
 
@@ -10,14 +16,17 @@
 
         </ion-refresher-content>
     </ion-refresher>
+    <!--<ion-toolbar no-border-top>-->
+        <!--<ion-searchbar placeholder="Filter Items" (ionInput)="filterItems($event)"></ion-searchbar>-->
+    <!--</ion-toolbar>-->
     <ion-list *ngFor="let game of ligaData.actualYear.games" (click)="prophet.getProphecy(game.Team1.TeamName, game.Team2.TeamName, $event)">
-        <!-- <ion-list-header>
-            Spieltag {{game?.Group.GroupOrderID}}
-        </ion-list-header> -->
+         <ion-list-header *ngIf="isNotSameGameDay(game.Group.GroupOrderID)">
+            <div item-right large>Spieltag {{game?.Group.GroupOrderID}}</div>
+        </ion-list-header>
 
 
         Spieltag: {{game.MatchDateTime | date:'d.M.y'}}
-        <ion-item>
+        <ion-item id={{game.MatchID}}>
 
             <ion-avatar item-start small>
                 <img src={{game.Team1.TeamIconUrl}} style="width: 30px; height: 30px">
