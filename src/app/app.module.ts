@@ -17,6 +17,7 @@ import { IonicStorageModule } from '@ionic/storage';
 import { DbControllerProvider } from '../providers/db-controller/db-controller';
 import { ApiControllerProvider } from '../providers/api-controller/api-controller';
 import { ProphetEngineProvider } from '../providers/prophet-engine/prophet-engine';
+import { Keyboard} from "@ionic-native/keyboard";
 
 
 @NgModule({
@@ -52,6 +53,7 @@ import { ProphetEngineProvider } from '../providers/prophet-engine/prophet-engin
     DbControllerProvider,
     ApiControllerProvider,
     ProphetEngineProvider,
+      Keyboard,
     
   ]
 })

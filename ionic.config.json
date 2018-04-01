@@ -2,5 +2,7 @@
   "name": "ligaherohelper",
   "app_id": "bb642259",
   "type": "ionic-angular",
-  "integrations": {}
+  "integrations": {
+    "cordova": {}
+  }
 }

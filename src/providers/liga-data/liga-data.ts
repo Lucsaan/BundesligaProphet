@@ -10,6 +10,7 @@ import { DbControllerProvider } from '../db-controller/db-controller';
 import { Observable } from "rxjs/Observable";
 import { Club } from '../../models/Club/club';
 import { Score } from '../../models/Club/score';
+import { Keyboard} from "@ionic-native/keyboard";
 
 @Injectable()
 export class LigaDataProvider {
@@ -42,7 +43,9 @@ export class LigaDataProvider {
     public toastCtrl : ToastController, 
     public loadingCtrl: LoadingController, 
     public apiController: ApiControllerProvider, 
-    public dbController : DbControllerProvider ) {
+    public dbController : DbControllerProvider,
+    private keyboard: Keyboard,
+  ) {
 
       this.loadDatabases(true);
       
@@ -53,7 +56,7 @@ export class LigaDataProvider {
       this.initData();
       //this.init();  
         
-    }
+  }
   
   init(){
     if(this.noConfig){
@@ -615,6 +618,7 @@ export class LigaDataProvider {
                 );
             })
         }
+        this.keyboard.close();
     }
   
 
