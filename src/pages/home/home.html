@@ -9,7 +9,7 @@
         </ion-buttons>
     </ion-navbar>
     <ion-toolbar no-border-top>
-        <ion-searchbar placeholder="Verein" (ionInput)="ligaData.filterGames($event)"></ion-searchbar>
+        <ion-searchbar placeholder="Verein" (search)="ligaData.filterGames($event)"></ion-searchbar>
     </ion-toolbar>
 </ion-header>
 
