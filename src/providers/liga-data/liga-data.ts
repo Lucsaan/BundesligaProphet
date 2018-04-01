@@ -23,6 +23,7 @@ export class LigaDataProvider {
   loader: any;
 
   actualYear: any = {};
+  actualYearFilter: any = {};
   actualYearSorted: any;
   lastYears: any;
   config: any = [];
@@ -47,6 +48,7 @@ export class LigaDataProvider {
       
       this.loader = this.presentLoading();
       this.actualYear.games = [];
+      this.actualYearFilter.games = [];
       
       this.initData();
       //this.init();  
@@ -143,6 +145,7 @@ export class LigaDataProvider {
       if(updated){
         this.showToast('Neue Spiele hinzugefügt', 3);
         this.actualYear = this.lastYears[this.lastYears.length-1];
+        this.actualYearFilter = Object.assign({}, this.actualYear);
         console.log(this.lastYears);
         this.dbController.update(this.lastYearsDb, this.actualYear).then(response => {
           console.log(response);
@@ -251,6 +254,7 @@ export class LigaDataProvider {
       console.log('Sämtliche Spieldaten vorhanden');
       this.config = response[2];
       this.actualYear = this.lastYears[this.lastYears.length-1];
+      this.actualYearFilter = Object.assign({}, this.actualYear);
       console.log(Object.keys(this.actualClubs).length);
       if(Object.keys(this.actualClubs).length === 0){
         console.log('Speichere Clubs');
@@ -584,6 +588,7 @@ export class LigaDataProvider {
     if(!forInit){
       this.loader = this.presentLoading();
       this.actualYear= {};
+      this.actualYearFilter = {};
       this.lastYears;
       this.config= [];
       this.actualClubs= {};
@@ -591,9 +596,26 @@ export class LigaDataProvider {
       this.games = {};
       this.clubs = [];
       this.actualYear.games = [];
+      this.actualYearFilter.games = [];
       this.initData();
     }
   }
+
+    filterGames(ev: any) {
+        this.actualYearFilter = Object.assign({}, this.actualYear);
+        // set val to the value of the searchbar
+        let val = ev.target.value;
+
+        // if the value is an empty string don't filter the items
+        if (val && val.trim() != '') {
+            this.actualYearFilter.games = this.actualYearFilter.games.filter((game) => {
+                return (
+                    game.Team1.TeamName.toLowerCase().indexOf(val.toLowerCase()) > -1 ||
+                    game.Team2.TeamName.toLowerCase().indexOf(val.toLowerCase()) > -1
+                );
+            })
+        }
+    }
   
 
 }

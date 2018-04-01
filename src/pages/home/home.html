@@ -8,6 +8,9 @@
             <button ion-button large (click)="scrollTo()">Aktuell</button>
         </ion-buttons>
     </ion-navbar>
+    <ion-toolbar no-border-top>
+        <ion-searchbar placeholder="Verein" (ionInput)="ligaData.filterGames($event)"></ion-searchbar>
+    </ion-toolbar>
 </ion-header>
 
 <ion-content padding>
@@ -16,10 +19,7 @@
 
         </ion-refresher-content>
     </ion-refresher>
-    <!--<ion-toolbar no-border-top>-->
-        <!--<ion-searchbar placeholder="Filter Items" (ionInput)="filterItems($event)"></ion-searchbar>-->
-    <!--</ion-toolbar>-->
-    <ion-list *ngFor="let game of ligaData.actualYear.games" (click)="prophet.getProphecy(game.Team1.TeamName, game.Team2.TeamName, $event)">
+    <ion-list *ngFor="let game of ligaData.actualYearFilter.games" (click)="prophet.getProphecy(game.Team1.TeamName, game.Team2.TeamName, $event)">
          <ion-list-header *ngIf="isNotSameGameDay(game.Group.GroupOrderID)">
             <div item-right large>Spieltag {{game?.Group.GroupOrderID}}</div>
         </ion-list-header>
@@ -47,10 +47,5 @@
                 <h1>{{game.MatchResults[1]?.PointsTeam2}}</h1>
             </ion-avatar>
         </ion-item>
-
-
-
-
     </ion-list>
-
 </ion-content>

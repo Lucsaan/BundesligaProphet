@@ -42,7 +42,7 @@ export class HomePage {
   scrollTo() {
       let elementId = '';
       let done = false;
-      this.ligaData.actualYear.games.map((game) => {
+      this.ligaData.actualYearFilter.games.map((game) => {
           if(game.MatchResults[1] === undefined && done === false){
             elementId = game.MatchID;
             done = true;
