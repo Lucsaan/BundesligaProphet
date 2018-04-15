@@ -1,6 +1,6 @@
 <?xml version='1.0' encoding='utf-8'?>
-<widget id="eu.randomcode.bundesligaprophet" version="1.0.1" xmlns="http://www.w3.org/ns/widgets" xmlns:cdv="http://cordova.apache.org/ns/1.0">
-    <name>BundesligaProphet</name>
+<widget id="io.ionic.bundesligaprophet" version="1.0.1" xmlns="http://www.w3.org/ns/widgets" xmlns:cdv="http://cordova.apache.org/ns/1.0">
+    <name>Bundesliga Prophet</name>
     <description>Prophezeiht Ergebnisse der 1. Bundesliga</description>
     <author email="andreas.schmieder@googlemail.com" href="http://www.randomcode.eu">Ionic Framework Team</author>
     <content src="index.html" />
@@ -92,5 +92,5 @@
     <plugin name="cordova-plugin-splashscreen" spec="^5.0.2" />
     <plugin name="cordova-plugin-whitelist" spec="^1.3.3" />
     <plugin name="ionic-plugin-keyboard" spec="^2.2.1" />
-    <engine name="ios" spec="4.5.4" />
+    <engine name="ios" spec="~4.5.4" />
 </widget>
